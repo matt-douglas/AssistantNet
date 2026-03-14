@@ -98,6 +98,7 @@
   position: relative;
   white-space: nowrap;
   overflow: hidden;
+  -webkit-user-select: none;
   user-select: none;
   border: 1px solid transparent;
 }
@@ -391,6 +392,7 @@
   color: var(--text-primary);
   box-shadow: var(--shadow-lg);
   animation: slideInRight var(--duration-normal) var(--ease-out);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   max-width: 380px;
 }
@@ -410,6 +412,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 9000;
   display: flex;

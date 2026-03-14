@@ -2,6 +2,7 @@
 import { dataStore } from '../../services/data.js';
 import { initLLM, isLLMReady } from '../../services/llm.js';
 import { showToast } from '../../main.js';
+import { escapeAttr } from '../../services/utils.js';
 import './settings.css';
 
 export function renderSettings(container) {
@@ -250,8 +251,6 @@ function getStorageSize() {
   } catch { return 'Unknown'; }
 }
 
-function escapeAttr(str) {
-  return (str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+
 
 export function destroySettings() {}

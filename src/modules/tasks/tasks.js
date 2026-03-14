@@ -1,6 +1,7 @@
 // AssistantNet — Task Engine Module (Kanban Board + Edit + Subtasks)
 import { dataStore } from '../../services/data.js';
 import { showToast } from '../../main.js';
+import { escapeAttr } from '../../services/utils.js';
 import './tasks.css';
 
 const COLUMNS = [
@@ -377,8 +378,6 @@ function showAddTaskModal() {
   titleInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') create(); });
 }
 
-function escapeAttr(str) {
-  return (str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+
 
 export function destroyTasks() {}

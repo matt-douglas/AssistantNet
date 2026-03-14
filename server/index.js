@@ -2,7 +2,7 @@
 import express from 'express';
 import session from 'express-session';
 import cors from 'cors';
-import { initDB, db } from './db.js';
+import { initDB } from './db.js';
 import { authRouter, requireAuth } from './auth.js';
 import { apiRouter } from './api.js';
 

@@ -2,6 +2,7 @@
 import { dataStore } from '../../services/data.js';
 import { quickAction } from '../../services/llm.js';
 import { showToast } from '../../main.js';
+import { escapeHtml } from '../../services/utils.js';
 import './inbox.css';
 
 let selectedEmailId = null;
@@ -191,7 +192,7 @@ function bindInboxEvents() {
               <button class="btn btn-ghost btn-sm" id="close-draft">✕</button>
             </div>
             <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3)">Re: ${email.subject}</div>
-            <div style="white-space: pre-wrap; font-size: var(--text-sm); padding: var(--space-4); background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle)">${draft}</div>
+            <div style="white-space: pre-wrap; font-size: var(--text-sm); padding: var(--space-4); background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle)">${escapeHtml(draft)}</div>
             <div style="display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-4)">
               <button class="btn btn-ghost" id="close-draft-btn">Close</button>
             </div>
@@ -224,7 +225,7 @@ function bindInboxEvents() {
           previewBody.insertAdjacentHTML('beforeend', `
             <div class="ai-summary-block" style="margin-top: var(--space-4); padding: var(--space-4); background: rgba(99, 102, 241, 0.08); border-radius: var(--radius-md); border-left: 3px solid var(--accent-primary)">
               <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--accent-primary); margin-bottom: var(--space-2)">🧠 AI Summary</div>
-              <div style="font-size: var(--text-sm); white-space: pre-wrap; color: var(--text-secondary)">${summary}</div>
+              <div style="font-size: var(--text-sm); white-space: pre-wrap; color: var(--text-secondary)">${escapeHtml(summary)}</div>
             </div>
           `);
         }

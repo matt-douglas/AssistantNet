@@ -47,6 +47,7 @@
 
 .kanban-column {
   background: var(--bg-glass);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);

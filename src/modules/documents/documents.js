@@ -1,6 +1,8 @@
 // AssistantNet — Document Hub Module
 import { dataStore } from '../../services/data.js';
+import { quickAction, isLLMReady } from '../../services/llm.js';
 import { showToast } from '../../main.js';
+import { escapeHtml } from '../../services/utils.js';
 import './documents.css';
 
 let searchQuery = '';
@@ -174,18 +176,62 @@ function bindDocumentEvents(container) {
       e.preventDefault();
       uploadArea.style.borderColor = '';
       uploadArea.style.background = '';
-      showToast('Document uploaded!', 'success');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        for (const file of files) {
+          const sizeStr = file.size > 1024 * 1024
+            ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+            : (file.size / 1024).toFixed(1) + ' KB';
+          dataStore.addDocument({
+            name: file.name,
+            type: file.type.includes('pdf') ? 'pdf' : file.type.includes('image') ? 'image' : 'document',
+            category: 'general',
+            size: sizeStr,
+            owner: 'You',
+            modified: 'Just now',
+            shared: false
+          });
+        }
+        showToast(`${files.length} document${files.length > 1 ? 's' : ''} uploaded!`, 'success');
+        renderDocuments(container);
+      }
     });
   }
 
   // AI Summarize buttons
   document.querySelectorAll('.doc-summarize').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      showToast(`Summarizing "${btn.dataset.docName}"...`, 'info');
-      setTimeout(() => {
-        showToast('Summary ready! Check AI Assistant for details.', 'success');
-      }, 2000);
+      const docName = btn.dataset.docName;
+      showToast(`Summarizing "${docName}"...`, 'info');
+      btn.disabled = true;
+      if (isLLMReady()) {
+        const summary = await quickAction('summarize', `Document: ${docName}`);
+        showToast('Summary generated!', 'success');
+        // Show summary in a modal
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.remove('hidden');
+        overlay.innerHTML = `
+          <div class="modal" style="animation: scaleIn 0.2s var(--ease-spring); max-width: 540px; max-height: 80vh; overflow-y: auto">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4)">
+              <h2>🧠 AI Summary</h2>
+              <button class="btn btn-ghost btn-sm" id="close-doc-summary">✕</button>
+            </div>
+            <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3)">${escapeHtml(docName)}</div>
+            <div style="white-space: pre-wrap; font-size: var(--text-sm); padding: var(--space-4); background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle)">${escapeHtml(summary)}</div>
+            <div style="display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-4)">
+              <button class="btn btn-ghost" id="close-doc-summary-btn">Close</button>
+            </div>
+          </div>
+        `;
+        const close = () => { overlay.classList.add('hidden'); overlay.innerHTML = ''; };
+        document.getElementById('close-doc-summary')?.addEventListener('click', close);
+        document.getElementById('close-doc-summary-btn')?.addEventListener('click', close);
+        overlay.addEventListener('click', (ev) => { if (ev.target === overlay) close(); });
+      } else {
+        showToast('Document summarization requires an LLM connection. Add your API key in Settings.', 'warning');
+      }
+      btn.disabled = false;
     });
   });
 

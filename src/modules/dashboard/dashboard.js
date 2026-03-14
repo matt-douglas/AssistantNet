@@ -1,6 +1,5 @@
 // AssistantNet — Dashboard Module (Executive Command Center)
 import { dataStore } from '../../services/data.js';
-import { router } from '../../router.js';
 import './dashboard.css';
 
 let charts = {};

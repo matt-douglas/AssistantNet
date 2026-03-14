@@ -14,6 +14,9 @@ import { renderCalendar, destroyCalendar } from './modules/calendar/calendar.js'
 import { renderTasks, destroyTasks } from './modules/tasks/tasks.js';
 import { renderDocuments, destroyDocuments } from './modules/documents/documents.js';
 import { renderSettings, destroySettings } from './modules/settings/settings.js';
+import { renderAnalytics, destroyAnalytics } from './modules/analytics/analytics.js';
+import { renderContacts, destroyContacts } from './modules/contacts/contacts.js';
+import { openCommandPalette, closeCommandPalette, isCommandPaletteOpen } from './modules/command-palette/command-palette.js';
 import { isLLMReady } from './services/llm.js';
 import { checkBackend, hasBackend } from './services/api.js';
 
@@ -27,6 +30,9 @@ const NAV_ITEMS = [
   { path: '/calendar', label: 'Calendar', icon: calendarIcon(), badge: null },
   { path: '/tasks', label: 'Task Engine', icon: tasksIcon(), badge: () => dataStore.getTasks().filter(t => t.priority === 'urgent' && t.status !== 'done').length || null },
   { path: '/documents', label: 'Documents', icon: documentsIcon(), badge: null },
+  { section: 'INSIGHTS' },
+  { path: '/analytics', label: 'Analytics', icon: analyticsIcon(), badge: null },
+  { path: '/contacts', label: 'Team & Contacts', icon: contactsIcon(), badge: null },
   { section: 'SYSTEM' },
   { path: '/settings', label: 'Settings', icon: settingsIcon(), badge: null },
 ];
@@ -40,6 +46,8 @@ const VIEWS = {
   '/tasks': { render: renderTasks, destroy: destroyTasks },
   '/documents': { render: renderDocuments, destroy: destroyDocuments },
   '/settings': { render: renderSettings, destroy: destroySettings },
+  '/analytics': { render: renderAnalytics, destroy: destroyAnalytics },
+  '/contacts': { render: renderContacts, destroy: destroyContacts },
 };
 
 let currentView = null;
@@ -420,14 +428,22 @@ function showOnboardingModal() {
 // ---- Keyboard Shortcuts ----
 function setupKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
-    // ⌘K — Focus search
+    // ⌘K — Command Palette
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
-      document.getElementById('global-search')?.focus();
+      if (isCommandPaletteOpen()) {
+        closeCommandPalette();
+      } else {
+        openCommandPalette();
+      }
     }
-    // Escape — Close mobile sidebar
+    // Escape — Close command palette or mobile sidebar
     if (e.key === 'Escape') {
-      document.getElementById('sidebar').classList.remove('open');
+      if (isCommandPaletteOpen()) {
+        closeCommandPalette();
+      } else {
+        document.getElementById('sidebar').classList.remove('open');
+      }
     }
   });
 }
@@ -472,6 +488,12 @@ function documentsIcon() {
 }
 function settingsIcon() {
   return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M3.87 3.87l1.41 1.41M14.72 14.72l1.41 1.41M3.87 16.13l1.41-1.41M14.72 5.28l1.41-1.41"/></svg>';
+}
+function analyticsIcon() {
+  return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17V9l4-2v10M9 17V6l4 3v8M15 17V4l3 3v10"/></svg>';
+}
+function contactsIcon() {
+  return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="16" cy="5" r="2"/><path d="M18 13c0-2-1-3.5-2.5-4"/></svg>';
 }
 
 // ---- Boot ----

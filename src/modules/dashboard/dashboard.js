@@ -1,5 +1,8 @@
 // AssistantNet — Dashboard Module (Executive Command Center)
 import { dataStore } from '../../services/data.js';
+import { quickAction, isLLMReady } from '../../services/llm.js';
+import { escapeHtml } from '../../services/utils.js';
+import { showToast } from '../../main.js';
 import './dashboard.css';
 
 let charts = {};
@@ -142,6 +145,9 @@ export function renderDashboard(container) {
 
   // Initialize charts
   setTimeout(() => initCharts(), 100);
+
+  // Wire Daily Briefing button
+  document.getElementById('qa-daily-brief')?.addEventListener('click', () => openBriefingPanel());
 }
 
 function renderKPICard(label, value, change, index) {
@@ -281,4 +287,151 @@ async function initCharts() {
 export function destroyDashboard() {
   Object.values(charts).forEach(c => c?.destroy());
   charts = {};
+  closeBriefingPanel();
+}
+
+// ---- Daily Briefing Panel ----
+function openBriefingPanel() {
+  if (document.getElementById('briefing-panel')) {
+    closeBriefingPanel();
+    return;
+  }
+
+  const tasks = dataStore.getTasks();
+  const emails = dataStore.getEmails();
+  const meetings = dataStore.getMeetings();
+  const today = new Date().toISOString().split('T')[0];
+  const todayMeetings = meetings.filter(m => m.date === today);
+  const urgentTasks = tasks.filter(t => t.priority === 'urgent' && t.status !== 'done');
+  const unread = emails.filter(e => !e.read);
+
+  const panel = document.createElement('div');
+  panel.id = 'briefing-panel';
+  panel.className = 'briefing-panel';
+  panel.innerHTML = `
+    <div class="briefing-header">
+      <h2>📋 Daily Briefing</h2>
+      <button class="btn btn-ghost btn-sm" id="close-briefing">✕</button>
+    </div>
+    <div class="briefing-date">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+
+    <div class="briefing-section">
+      <div class="briefing-section-title">🎯 Today's Priorities</div>
+      ${urgentTasks.length > 0 ? urgentTasks.map(t => `
+        <div class="briefing-item priority">
+          <div class="briefing-item-text">${escapeHtml(t.title)}</div>
+          <div class="briefing-item-meta">${(t.tags || []).join(', ')} · ${t.dueDate || 'No due date'}</div>
+          <div class="briefing-item-actions">
+            <button class="btn btn-ghost btn-sm briefing-snooze" data-id="${t.id}">😴 Snooze</button>
+            <button class="btn btn-ghost btn-sm briefing-done" data-id="${t.id}">✅ Done</button>
+          </div>
+        </div>
+      `).join('') : '<div class="briefing-empty">No urgent tasks — great job! 🎉</div>'}
+    </div>
+
+    <div class="briefing-section">
+      <div class="briefing-section-title">📅 Schedule (${todayMeetings.length} meetings)</div>
+      ${todayMeetings.length > 0 ? todayMeetings.map(m => `
+        <div class="briefing-item">
+          <div class="briefing-item-text">${escapeHtml(m.title)}</div>
+          <div class="briefing-item-meta">${m.startTime} - ${m.endTime} · ${m.location || 'No location'}</div>
+        </div>
+      `).join('') : '<div class="briefing-empty">Calendar clear — focus time! 🧘</div>'}
+    </div>
+
+    <div class="briefing-section">
+      <div class="briefing-section-title">📧 Inbox (${unread.length} unread)</div>
+      ${unread.slice(0, 3).map(e => `
+        <div class="briefing-item">
+          <div class="briefing-item-text">${escapeHtml(e.subject)}</div>
+          <div class="briefing-item-meta">from ${escapeHtml(e.from)} · ${e.time}</div>
+        </div>
+      `).join('')}
+      ${unread.length > 3 ? `<div class="briefing-more">+${unread.length - 3} more</div>` : ''}
+    </div>
+
+    <div class="briefing-section">
+      <div class="briefing-section-title">🧠 AI Summary</div>
+      <div class="briefing-ai-summary" id="briefing-ai-summary">
+        <button class="btn btn-primary btn-sm" id="generate-briefing" style="width: 100%">Generate AI Briefing</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+  requestAnimationFrame(() => panel.classList.add('open'));
+
+  document.getElementById('close-briefing')?.addEventListener('click', closeBriefingPanel);
+
+  // Snooze / Done buttons
+  panel.querySelectorAll('.briefing-done').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const task = tasks.find(t => t.id == btn.dataset.id);
+      if (task) {
+        task.status = 'done';
+        dataStore.updateTask(task.id, task);
+        btn.closest('.briefing-item').style.opacity = '0.4';
+        btn.closest('.briefing-item').style.textDecoration = 'line-through';
+        showToast('Task marked done!', 'success');
+      }
+    });
+  });
+
+  panel.querySelectorAll('.briefing-snooze').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const task = tasks.find(t => t.id == btn.dataset.id);
+      if (task) {
+        task.priority = 'medium';
+        dataStore.updateTask(task.id, task);
+        btn.closest('.briefing-item').classList.remove('priority');
+        showToast('Task snoozed to medium priority', 'info');
+      }
+    });
+  });
+
+  // AI briefing
+  document.getElementById('generate-briefing')?.addEventListener('click', async () => {
+    const btn = document.getElementById('generate-briefing');
+    const container = document.getElementById('briefing-ai-summary');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+
+    if (isLLMReady()) {
+      const summary = await quickAction('briefing',
+        `Generate a concise daily briefing for a business executive.
+Key data: ${urgentTasks.length} urgent tasks, ${todayMeetings.length} meetings today, ${unread.length} unread emails.
+Top urgent tasks: ${urgentTasks.slice(0, 3).map(t => t.title).join(', ')}.
+Provide: 3 bullet points of priorities, 1 risk alert, and 1 opportunity.`
+      );
+      container.innerHTML = `<div class="briefing-ai-text">${escapeHtml(summary)}</div>`;
+    } else {
+      container.innerHTML = `
+        <div class="briefing-ai-text">
+• Focus on ${urgentTasks.length} urgent tasks, especially client-facing deliverables
+• ${todayMeetings.length > 0 ? `Prepare for ${todayMeetings[0]?.title || 'meetings'}` : 'No meetings — ideal for deep work'}
+• Process ${unread.length} unread emails; prioritize from finance and legal
+
+⚠️ Risk: ${urgentTasks.length > 2 ? 'High task load may cause deadline pressure' : 'Workload manageable'}
+💡 Opportunity: Current task completion rate is strong — maintain momentum
+        </div>
+      `;
+    }
+  });
+
+  // Click outside to close
+  const clickOutside = (e) => {
+    if (!panel.contains(e.target) && !e.target.closest('#qa-daily-brief')) {
+      closeBriefingPanel();
+      document.removeEventListener('click', clickOutside);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', clickOutside), 200);
+}
+
+function closeBriefingPanel() {
+  const panel = document.getElementById('briefing-panel');
+  if (panel) {
+    panel.classList.remove('open');
+    setTimeout(() => panel.remove(), 300);
+  }
 }

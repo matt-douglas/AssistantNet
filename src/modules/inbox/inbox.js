@@ -188,9 +188,17 @@ function bindInboxEvents() {
 
   const summarizeBtn = document.getElementById('ai-summarize-email');
   if (summarizeBtn) {
-    summarizeBtn.addEventListener('click', () => {
-      showToast('Summarizing email...', 'info');
-      setTimeout(() => showToast('Summary generated! Check AI Assistant.', 'success'), 1500);
+    summarizeBtn.addEventListener('click', async () => {
+      const email = dataStore.getEmail(summarizeBtn.dataset.emailId);
+      if (email) {
+        showToast('Summarizing email...', 'info');
+        summarizeBtn.disabled = true;
+        summarizeBtn.textContent = '⏳ Summarizing...';
+        const summary = await quickAction('summarize', `From: ${email.from}\nSubject: ${email.subject}\n\n${email.body}`);
+        showToast('Summary ready! Check AI Assistant for the full response.', 'success');
+        summarizeBtn.disabled = false;
+        summarizeBtn.textContent = '📋 Summarize';
+      }
     });
   }
 

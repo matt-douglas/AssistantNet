@@ -114,13 +114,13 @@ AssistantNet works out of the box with rich built-in responses (no API key requi
 ### Phase 1 — Fix Bugs & Polish (v1.1)
 > Priority: Ship quality. Fix everything broken before adding features.
 
-- [ ] Fix double `init()` call race condition
-- [ ] Fix calendar `formatHour(12)` → "0 PM" bug
-- [ ] Fix sidebar rebuild on every nav change (update classes in-place)
-- [ ] Wire up inbox Summarize button to actually call `quickAction('summarize', ...)`
-- [ ] Import `marked` once at stream start, not per-chunk
-- [ ] Add 404/unknown route handling in router
-- [ ] Replace `window.prompt()` with a proper modal for task creation
+- [x] Fix double `init()` call race condition
+- [x] Fix calendar `formatHour(12)` → "0 PM" bug
+- [x] Fix sidebar rebuild on every nav change (update classes in-place)
+- [x] Wire up inbox Summarize button to actually call `quickAction('summarize', ...)`
+- [x] Import `marked` once at stream start, not per-chunk
+- [x] Add 404/unknown route handling in router
+- [x] Replace `window.prompt()` with a proper modal for task creation
 
 ### Phase 2 — Settings & LLM Activation (v1.2)
 > Priority: Make the AI brain actually work.

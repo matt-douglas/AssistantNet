@@ -24,6 +24,9 @@ class Router {
       this.currentRoute = path;
       this.routes[path]();
       if (this.onRouteChange) this.onRouteChange(path);
+    } else {
+      // Unknown route — redirect to dashboard
+      this.navigate('/dashboard');
     }
   }
 

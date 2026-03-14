@@ -126,11 +126,19 @@ function updateActiveNav(path) {
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', el.dataset.path === path);
   });
-  // Refresh badges
-  buildSidebar();
-  // Re-activate the correct nav item
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.path === path);
+  // Update badge values in-place
+  NAV_ITEMS.forEach(item => {
+    if (item.section || !item.badge) return;
+    const navEl = document.getElementById(`nav-${item.path.replace('/', '')}`);
+    if (!navEl) return;
+    const badgeValue = typeof item.badge === 'function' ? item.badge() : item.badge;
+    const existing = navEl.querySelector('.nav-item-badge');
+    if (badgeValue) {
+      if (existing) { existing.textContent = badgeValue; }
+      else { navEl.insertAdjacentHTML('beforeend', `<span class="nav-item-badge">${badgeValue}</span>`); }
+    } else if (existing) {
+      existing.remove();
+    }
   });
 }
 
@@ -252,5 +260,8 @@ function documentsIcon() {
 }
 
 // ---- Boot ----
-document.addEventListener('DOMContentLoaded', init);
-if (document.readyState !== 'loading') init();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

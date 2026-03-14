@@ -136,22 +136,75 @@ function bindTaskEvents() {
   const addBtn = document.getElementById('add-task-btn');
   if (addBtn) {
     addBtn.addEventListener('click', () => {
-      const title = prompt('Enter task title:');
-      if (title) {
-        dataStore.addTask({
-          title,
-          status: 'todo',
-          priority: 'medium',
-          assignee: 'You',
-          dueDate: 'This week',
-          tags: [],
-          subtasks: []
-        });
-        showToast('Task created!', 'success');
-        renderTasks(document.getElementById('view-container'));
-      }
+      showAddTaskModal();
     });
   }
+}
+
+function showAddTaskModal() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = `
+    <div class="modal" style="animation: scaleIn 0.2s var(--ease-spring)">
+      <h2>✅ New Task</h2>
+      <div class="input-group" style="margin-bottom: var(--space-4)">
+        <label class="input-label">Title</label>
+        <input type="text" id="new-task-title" class="input" placeholder="What needs to be done?" autofocus />
+      </div>
+      <div style="display: flex; gap: var(--space-3); margin-bottom: var(--space-5)">
+        <div class="input-group" style="flex: 1">
+          <label class="input-label">Priority</label>
+          <select id="new-task-priority" class="select" style="width: 100%">
+            <option value="medium" selected>Medium</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="input-group" style="flex: 1">
+          <label class="input-label">Assignee</label>
+          <input type="text" id="new-task-assignee" class="input" value="You" />
+        </div>
+      </div>
+      <div style="display: flex; gap: var(--space-3); justify-content: flex-end">
+        <button class="btn btn-ghost" id="cancel-task-btn">Cancel</button>
+        <button class="btn btn-primary" id="confirm-task-btn">Create Task</button>
+      </div>
+    </div>
+  `;
+
+  const titleInput = document.getElementById('new-task-title');
+  titleInput.focus();
+
+  const close = () => {
+    overlay.classList.add('hidden');
+    overlay.innerHTML = '';
+  };
+
+  document.getElementById('cancel-task-btn').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  const create = () => {
+    const title = titleInput.value.trim();
+    if (!title) { titleInput.focus(); return; }
+    const priority = document.getElementById('new-task-priority').value;
+    const assignee = document.getElementById('new-task-assignee').value.trim() || 'You';
+    dataStore.addTask({
+      title,
+      status: 'todo',
+      priority,
+      assignee,
+      dueDate: 'This week',
+      tags: [],
+      subtasks: []
+    });
+    showToast('Task created!', 'success');
+    close();
+    renderTasks(document.getElementById('view-container'));
+  };
+
+  document.getElementById('confirm-task-btn').addEventListener('click', create);
+  titleInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') create(); });
 }
 
 export function destroyTasks() {}

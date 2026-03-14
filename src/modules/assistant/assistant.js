@@ -136,17 +136,23 @@ async function sendMessage() {
   };
 
   try {
+    // Import marked once before streaming
+    let markedParse = null;
+    try {
+      const { marked } = await import('marked');
+      markedParse = marked.parse.bind(marked);
+    } catch { /* fallback below */ }
+
     // Stream response  
     let fullText = '';
     for await (const chunk of streamChat(text, context)) {
       fullText += chunk;
       assistantMsg.text = fullText;
 
-      // Parse markdown dynamically
-      try {
-        const { marked } = await import('marked');
-        assistantMsg.html = marked.parse(fullText);
-      } catch {
+      // Parse markdown
+      if (markedParse) {
+        assistantMsg.html = markedParse(fullText);
+      } else {
         assistantMsg.html = escapeHtml(fullText).replace(/\n/g, '<br>');
       }
 

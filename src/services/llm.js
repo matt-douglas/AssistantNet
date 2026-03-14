@@ -80,11 +80,13 @@ export async function* streamChat(userMessage, context = '') {
 export async function quickAction(action, context) {
   const prompts = {
     'draft-email': `Draft a professional email reply to the following email. Be concise, professional, and actionable:\n\n${context}`,
+    'draft': `Draft a professional reply to the following email. Be concise, professional, and actionable:\n\n${context}`,
     'summarize': `Provide a concise executive summary of the following document/content. Lead with key takeaways:\n\n${context}`,
     'break-tasks': `Break down the following goal into specific, actionable subtasks with clear ownership and deadlines:\n\n${context}`,
     'schedule': `Analyze the following scheduling request and suggest optimal time slots, considering potential conflicts:\n\n${context}`,
     'analyze': `Provide a data-driven analysis of the following business metrics. Lead with insights and actionable recommendations:\n\n${context}`,
     'prioritize': `Review the following items and provide a prioritized ranking based on business impact, urgency, and effort. Explain your reasoning:\n\n${context}`,
+    'briefing': `Generate a concise, executive-style morning briefing based on the following data. Lead with priorities and recommended focus areas:\n\n${context}`,
   };
 
   const prompt = prompts[action] || context;

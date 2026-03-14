@@ -14,8 +14,9 @@ class WorkflowEngine {
   }
 
   on(event, callback) {
-    this.listeners.add({ event, callback });
-    return () => this.listeners.delete({ event, callback });
+    const listener = { event, callback };
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
 
   emit(event, data) {

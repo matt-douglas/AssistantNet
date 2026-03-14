@@ -89,10 +89,10 @@ export function renderDashboard(container) {
               <div class="activity-item">
                 <span class="activity-icon">${a.icon}</span>
                 <div class="activity-content">
-                  <div class="activity-text">${a.action}</div>
+                  <div class="activity-text">${a.text}</div>
                   <div class="activity-meta">
                     <span>${a.time}</span>
-                    <span class="activity-badge">${a.type === 'auto' ? 'AUTO' : 'MANUAL'}</span>
+                    <span class="activity-badge">${a.badge === 'auto' ? 'AUTO' : 'MANUAL'}</span>
                   </div>
                 </div>
               </div>

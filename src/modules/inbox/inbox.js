@@ -110,7 +110,7 @@ function renderEmailPreview(email) {
       </div>
     </div>
     <div class="email-preview-body">
-      <div class="email-body-text">${email.body}</div>
+      <div class="email-body-text" style="white-space: pre-wrap">${email.body}</div>
     </div>
     <div class="email-ai-actions">
       <div class="ai-label">🧠 AI Actions</div>
@@ -179,9 +179,28 @@ function bindInboxEvents() {
         draftBtn.disabled = true;
         draftBtn.textContent = '⏳ Drafting...';
         const draft = await quickAction('draft-email', `From: ${email.from}\nSubject: ${email.subject}\n\n${email.body}`);
-        showToast('Draft ready! Check AI Assistant for the full response.', 'success');
         draftBtn.disabled = false;
         draftBtn.textContent = '✍️ Draft Reply';
+        // Show draft in modal
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.remove('hidden');
+        overlay.innerHTML = `
+          <div class="modal" style="animation: scaleIn 0.2s var(--ease-spring); max-width: 560px; max-height: 80vh; overflow-y: auto">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4)">
+              <h2>✍️ Draft Reply</h2>
+              <button class="btn btn-ghost btn-sm" id="close-draft">✕</button>
+            </div>
+            <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3)">Re: ${email.subject}</div>
+            <div style="white-space: pre-wrap; font-size: var(--text-sm); padding: var(--space-4); background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle)">${draft}</div>
+            <div style="display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-4)">
+              <button class="btn btn-ghost" id="close-draft-btn">Close</button>
+            </div>
+          </div>
+        `;
+        const close = () => { overlay.classList.add('hidden'); overlay.innerHTML = ''; };
+        document.getElementById('close-draft')?.addEventListener('click', close);
+        document.getElementById('close-draft-btn')?.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
       }
     });
   }
@@ -195,9 +214,20 @@ function bindInboxEvents() {
         summarizeBtn.disabled = true;
         summarizeBtn.textContent = '⏳ Summarizing...';
         const summary = await quickAction('summarize', `From: ${email.from}\nSubject: ${email.subject}\n\n${email.body}`);
-        showToast('Summary ready! Check AI Assistant for the full response.', 'success');
         summarizeBtn.disabled = false;
         summarizeBtn.textContent = '📋 Summarize';
+        // Show summary inline below email body
+        const previewBody = document.querySelector('.email-preview-body');
+        if (previewBody) {
+          const existing = previewBody.querySelector('.ai-summary-block');
+          if (existing) existing.remove();
+          previewBody.insertAdjacentHTML('beforeend', `
+            <div class="ai-summary-block" style="margin-top: var(--space-4); padding: var(--space-4); background: rgba(99, 102, 241, 0.08); border-radius: var(--radius-md); border-left: 3px solid var(--accent-primary)">
+              <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--accent-primary); margin-bottom: var(--space-2)">🧠 AI Summary</div>
+              <div style="font-size: var(--text-sm); white-space: pre-wrap; color: var(--text-secondary)">${summary}</div>
+            </div>
+          `);
+        }
       }
     });
   }
@@ -217,6 +247,28 @@ function bindInboxEvents() {
           subtasks: []
         });
         showToast('Task created from email!', 'success');
+      }
+    });
+  }
+
+  // Schedule Meeting from email
+  const meetingBtn = document.getElementById('ai-schedule-meeting');
+  if (meetingBtn) {
+    meetingBtn.addEventListener('click', () => {
+      const email = dataStore.getEmail(meetingBtn.dataset.emailId);
+      if (email) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dataStore.addMeeting({
+          title: `Meeting: ${email.subject}`,
+          date: tomorrow.toISOString().split('T')[0],
+          startTime: '14:00',
+          endTime: '15:00',
+          location: 'Zoom',
+          category: email.category || 'external',
+          attendees: [email.from]
+        });
+        showToast(`Meeting scheduled with ${email.from} for tomorrow`, 'success');
       }
     });
   }

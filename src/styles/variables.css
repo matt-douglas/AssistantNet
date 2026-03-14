@@ -234,6 +234,7 @@ a:hover {
 /* Utility classes */
 .animate-fade-in { animation: fadeIn var(--duration-normal) var(--ease-out) forwards; }
 .animate-fade-in-up { animation: fadeInUp var(--duration-slow) var(--ease-out) forwards; }
+.animate-fade-in-down { animation: fadeInDown var(--duration-normal) var(--ease-out) forwards; }
 .animate-slide-in-right { animation: slideInRight var(--duration-slow) var(--ease-out) forwards; }
 .animate-scale-in { animation: scaleIn var(--duration-normal) var(--ease-spring) forwards; }
 

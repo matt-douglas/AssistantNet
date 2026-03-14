@@ -132,11 +132,17 @@ function seedDemoData() {
     taskStmt.run(userId, t.title, t.status, t.priority, t.assignee, t.due_date, t.tags, t.subtasks);
   }
 
-  // Seed meetings
+  // Seed meetings (dynamic dates relative to today)
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
   const meetings = [
-    { title: 'Team Standup', date: '2026-03-14', time: '9:00 AM', end_time: '9:30 AM', location: 'Zoom', category: 'team' },
-    { title: 'Board Review', date: '2026-03-14', time: '2:00 PM', end_time: '3:30 PM', location: 'Conference Room A', category: 'executive' },
-    { title: 'Sprint Planning', date: '2026-03-15', time: '10:00 AM', end_time: '11:00 AM', location: 'Zoom', category: 'engineering' },
+    { title: 'Team Standup', date: todayStr, time: '9:00 AM', end_time: '9:30 AM', location: 'Zoom', category: 'team' },
+    { title: 'Board Review', date: todayStr, time: '2:00 PM', end_time: '3:30 PM', location: 'Conference Room A', category: 'executive' },
+    { title: 'Sprint Planning', date: tomorrowStr, time: '10:00 AM', end_time: '11:00 AM', location: 'Zoom', category: 'engineering' },
   ];
 
   const meetingStmt = db.prepare(`INSERT INTO meetings (user_id, title, date, time, end_time, location, category) VALUES (?, ?, ?, ?, ?, ?, ?)`);

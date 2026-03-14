@@ -7,10 +7,7 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
 
-function getToday() {
-  const d = new Date();
-  return d.toISOString().split('T')[0];
-}
+
 
 function seedEmails() {
   return [
@@ -174,14 +171,14 @@ function seedKPIs() {
 
 function seedActivityLog() {
   return [
-    { id: generateId(), action: 'Triaged 12 incoming emails', module: 'inbox', time: '3 min ago', icon: '📧', type: 'auto' },
-    { id: generateId(), action: 'Drafted reply to Sarah Chen re: Q1 Revenue Report', module: 'inbox', time: '8 min ago', icon: '✍️', type: 'auto' },
-    { id: generateId(), action: 'Rescheduled Engineering Review (conflict detected)', module: 'calendar', time: '15 min ago', icon: '📅', type: 'auto' },
-    { id: generateId(), action: 'Created 3 subtasks for "Board Prep"', module: 'tasks', time: '22 min ago', icon: '✅', type: 'auto' },
-    { id: generateId(), action: 'Summarized TechVault Partnership Agreement (4 pages → key terms)', module: 'documents', time: '35 min ago', icon: '📄', type: 'auto' },
-    { id: generateId(), action: 'Flagged Apex Financial escalation as retention-critical', module: 'inbox', time: '1 hr ago', icon: '🚨', type: 'auto' },
-    { id: generateId(), action: 'Generated Q2 OKR template from historical data', module: 'documents', time: '1.5 hr ago', icon: '📊', type: 'auto' },
-    { id: generateId(), action: 'Prepared onboarding packet for 4 new hires', module: 'tasks', time: '2 hr ago', icon: '👥', type: 'auto' },
+    { id: generateId(), text: 'Triaged 12 incoming emails', time: '3 min ago', icon: '📧', badge: 'auto' },
+    { id: generateId(), text: 'Drafted reply to Sarah Chen re: Q1 Revenue Report', time: '8 min ago', icon: '✍️', badge: 'auto' },
+    { id: generateId(), text: 'Rescheduled Engineering Review (conflict detected)', time: '15 min ago', icon: '📅', badge: 'auto' },
+    { id: generateId(), text: 'Created 3 subtasks for "Board Prep"', time: '22 min ago', icon: '✅', badge: 'auto' },
+    { id: generateId(), text: 'Summarized TechVault Partnership Agreement (4 pages → key terms)', time: '35 min ago', icon: '📄', badge: 'auto' },
+    { id: generateId(), text: 'Flagged Apex Financial escalation as retention-critical', time: '1 hr ago', icon: '🚨', badge: 'auto' },
+    { id: generateId(), text: 'Generated Q2 OKR template from historical data', time: '1.5 hr ago', icon: '📊', badge: 'auto' },
+    { id: generateId(), text: 'Prepared onboarding packet for 4 new hires', time: '2 hr ago', icon: '👥', badge: 'auto' },
   ];
 }
 
@@ -285,9 +282,6 @@ class DataStore {
   // Document methods
   getDocuments() { return this.data.documents; }
   addDocument(doc) { this.data.documents.push({ id: generateId(), ...doc }); this.save(); }
-
-  // Email methods
-  getEmail(id) { return this.data.emails.find(e => e.id === id); }
 
   // Meeting methods (extended)
   deleteMeeting(id) { this.data.meetings = this.data.meetings.filter(m => m.id !== id); this.save(); }

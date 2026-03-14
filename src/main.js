@@ -15,6 +15,7 @@ import { renderTasks, destroyTasks } from './modules/tasks/tasks.js';
 import { renderDocuments, destroyDocuments } from './modules/documents/documents.js';
 import { renderSettings, destroySettings } from './modules/settings/settings.js';
 import { isLLMReady } from './services/llm.js';
+import { checkBackend, hasBackend } from './services/api.js';
 
 // Navigation config
 const NAV_ITEMS = [
@@ -44,7 +45,11 @@ const VIEWS = {
 let currentView = null;
 
 // ---- Initialize App ----
-function init() {
+async function init() {
+  // Detect backend
+  await checkBackend();
+  console.log(`🧠 AssistantNet booting — Backend: ${hasBackend() ? '✅ Connected' : '⚠️ Offline (localStorage mode)'}`);
+
   buildSidebar();
   setupRouter();
   setupTopBar();

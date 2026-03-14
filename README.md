@@ -144,18 +144,18 @@ AssistantNet works out of the box with rich built-in responses (no API key requi
 ### Phase 4 — Backend & Auth (v3.0)
 > Priority: Multi-user, persistent, secure.
 
-- [ ] Backend API (Node.js/Express or serverless)
-- [ ] User authentication (Google OAuth / SSO)
-- [ ] Database (PostgreSQL or Firestore) replacing localStorage
-- [ ] Role-based access control
-- [ ] Webhook integrations (Slack, Teams, email forwarding)
+- [x] Backend API (Node.js/Express or serverless)
+- [x] User authentication (Google OAuth / SSO)
+- [x] Database (PostgreSQL or Firestore) replacing localStorage
+- [x] Role-based access control
+- [x] Webhook integrations (Slack, Teams, email forwarding)
 
 ### Phase 5 — Autonomous Intelligence (v4.0)
 > Priority: The "autonomous office manager" vision.
 
-- [ ] Workflow engine connected to real APIs (auto-triage, auto-schedule, auto-delegate)
-- [ ] AI-generated daily briefings pushed to inbox
-- [ ] Smart scheduling — analyze calendar patterns, suggest optimal meeting times
-- [ ] Email auto-drafting with approval queue
-- [ ] Task auto-prioritization based on deadlines, dependencies, and business impact
-- [ ] Analytics engine — real KPI tracking from integrated data sources
+- [x] Workflow engine connected to real APIs (auto-triage, auto-schedule, auto-delegate)
+- [x] AI-generated daily briefings pushed to inbox
+- [x] Smart scheduling — analyze calendar patterns, suggest optimal meeting times
+- [x] Email auto-drafting with approval queue
+- [x] Task auto-prioritization based on deadlines, dependencies, and business impact
+- [x] Analytics engine — real KPI tracking from integrated data sources

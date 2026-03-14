@@ -89,11 +89,11 @@ export function renderDashboard(container) {
           <div class="activity-feed">
             ${activities.slice(0, 6).map(a => `
               <div class="activity-item">
-                <span class="activity-icon">${a.icon}</span>
+                <span class="activity-icon">${a.icon || '🔵'}</span>
                 <div class="activity-content">
-                  <div class="activity-text">${a.text}</div>
+                  <div class="activity-text">${a.text || 'Activity logged'}</div>
                   <div class="activity-meta">
-                    <span>${a.time}</span>
+                    <span>${a.time || 'Recently'}</span>
                     <span class="activity-badge">${a.badge === 'auto' ? 'AUTO' : 'MANUAL'}</span>
                   </div>
                 </div>

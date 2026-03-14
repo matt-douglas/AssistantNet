@@ -2,6 +2,7 @@
 // Provides realistic seed data for all modules with localStorage persistence
 
 const STORAGE_KEY = 'assistantnet_data';
+const DATA_VERSION = 3;
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
@@ -215,13 +216,22 @@ class DataStore {
   load() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const data = JSON.parse(saved);
+        // Force re-seed if data version is outdated
+        if (data._version !== DATA_VERSION) {
+          console.log('AssistantNet: Data schema upgraded, re-seeding...');
+          return this.seed();
+        }
+        return data;
+      }
     } catch (e) { /* ignore */ }
     return this.seed();
   }
 
   seed() {
     const data = {
+      _version: DATA_VERSION,
       emails: seedEmails(),
       meetings: seedMeetings(),
       tasks: seedTasks(),

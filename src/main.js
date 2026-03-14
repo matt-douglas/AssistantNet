@@ -132,18 +132,26 @@ function switchView(path, view) {
     VIEWS[currentView].destroy();
   }
 
-  // Transition animation
+  // Page exit
   container.style.opacity = '0';
-  container.style.transform = 'translateY(8px)';
+  container.style.transform = 'translateY(12px) scale(0.99)';
+  container.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
 
   setTimeout(() => {
     view.render(container);
     currentView = path;
 
+    // Page enter
     requestAnimationFrame(() => {
-      container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-      container.style.opacity = '1';
-      container.style.transform = 'translateY(0)';
+      container.style.transition = 'none';
+      container.style.opacity = '0';
+      container.style.transform = 'translateY(12px) scale(0.99)';
+
+      requestAnimationFrame(() => {
+        container.style.transition = 'opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0) scale(1)';
+      });
     });
   }, 150);
 }

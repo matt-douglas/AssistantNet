@@ -5,16 +5,19 @@
 /* ---- Cards ---- */
 .card {
   background: var(--bg-glass);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
 }
 
 .card:hover {
-  border-color: var(--border-medium);
-  box-shadow: var(--shadow-md);
+  border-color: rgba(var(--accent-primary-rgb), 0.2);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .card-header {
@@ -51,12 +54,14 @@
   cursor: pointer;
   transition: all var(--duration-fast) ease;
   white-space: nowrap;
+  -webkit-user-select: none;
   user-select: none;
   line-height: 1.5;
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
+  transition-duration: 50ms;
 }
 
 .btn-primary {
@@ -67,14 +72,16 @@
 }
 
 .btn-primary:hover {
-  box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.4);
+  box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.4), 0 0 40px rgba(var(--accent-primary-rgb), 0.15);
   filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: var(--bg-glass);
   color: var(--text-primary);
   border: 1px solid var(--border-medium);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -339,6 +346,7 @@ textarea.input {
   color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--duration-fast) ease;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -352,6 +360,7 @@ textarea.input {
   background: rgba(var(--accent-primary-rgb), 0.15);
   border-color: var(--accent-primary);
   color: var(--accent-primary-hover);
+  box-shadow: 0 0 12px rgba(var(--accent-primary-rgb), 0.15);
 }
 
 /* ---- Empty State ---- */

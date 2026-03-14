@@ -22,6 +22,7 @@
               min-width var(--duration-slow) var(--ease-out);
   z-index: 100;
   position: relative;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar.collapsed {
@@ -53,6 +54,7 @@
   width: 34px;
   height: 34px;
   flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(var(--accent-primary-rgb), 0.4));
 }
 
 .logo-icon svg {
@@ -112,6 +114,7 @@
   background: rgba(var(--accent-primary-rgb), 0.12);
   color: var(--accent-primary-hover);
   border-color: rgba(var(--accent-primary-rgb), 0.15);
+  box-shadow: 0 0 16px rgba(var(--accent-primary-rgb), 0.08);
 }
 
 .nav-item.active::before {
@@ -124,6 +127,7 @@
   height: 60%;
   background: var(--accent-gradient);
   border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  box-shadow: 2px 0 12px rgba(var(--accent-primary-rgb), 0.4);
 }
 
 .nav-item svg {

@@ -280,9 +280,17 @@ class DataStore {
     if (task) { task.status = status; this.save(); }
   }
   addTask(task) { this.data.tasks.push({ id: generateId(), ...task }); this.save(); }
+  deleteTask(id) { this.data.tasks = this.data.tasks.filter(t => t.id !== id); this.save(); }
 
   // Document methods
   getDocuments() { return this.data.documents; }
+  addDocument(doc) { this.data.documents.push({ id: generateId(), ...doc }); this.save(); }
+
+  // Email methods
+  getEmail(id) { return this.data.emails.find(e => e.id === id); }
+
+  // Meeting methods (extended)
+  deleteMeeting(id) { this.data.meetings = this.data.meetings.filter(m => m.id !== id); this.save(); }
 
   // KPI & Analytics
   getKPIs() { return this.data.kpis; }

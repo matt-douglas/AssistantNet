@@ -230,6 +230,45 @@
   background: rgba(var(--accent-primary-rgb), 0.05);
 }
 
+/* Subtask List (in detail modal) */
+.subtask-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.subtask-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+}
+
+.subtask-item:hover {
+  background: var(--bg-glass-hover);
+}
+
+.subtask-item.completed span {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.subtask-checkbox {
+  accent-color: var(--accent-primary);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.task-detail-modal h2 {
+  font-size: var(--text-lg);
+}
+
 @media (max-width: 1200px) {
   .kanban-board { grid-template-columns: repeat(2, 1fr); }
 }

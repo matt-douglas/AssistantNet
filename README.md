@@ -134,12 +134,12 @@ AssistantNet works out of the box with rich built-in responses (no API key requi
 ### Phase 3 — Real Module Functionality (v2.0)
 > Priority: Replace seed data with real interactions.
 
-- [ ] **Inbox** — Gmail API integration (OAuth2, fetch real emails, send replies)
-- [ ] **Calendar** — Google Calendar API integration (read/write events, conflict detection)
-- [ ] **Tasks** — Real task CRUD with edit modal, subtask toggling, due date picker
-- [ ] **Documents** — Real file upload to IndexedDB or cloud storage, AI summarization via LLM
-- [ ] **Notifications** — Real notification panel with actionable items
-- [ ] **Search** — Cross-module search that queries emails, tasks, docs, and calendar
+- [x] **Inbox** — Gmail API integration (OAuth2, fetch real emails, send replies)
+- [x] **Calendar** — Google Calendar API integration (read/write events, conflict detection)
+- [x] **Tasks** — Real task CRUD with edit modal, subtask toggling, due date picker
+- [x] **Documents** — Real file upload to IndexedDB or cloud storage, AI summarization via LLM
+- [x] **Notifications** — Real notification panel with actionable items
+- [x] **Search** — Cross-module search that queries emails, tasks, docs, and calendar
 
 ### Phase 4 — Backend & Auth (v3.0)
 > Priority: Multi-user, persistent, secure.

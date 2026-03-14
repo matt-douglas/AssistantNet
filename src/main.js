@@ -162,21 +162,13 @@ function setupTopBar() {
     document.getElementById('sidebar').classList.toggle('open');
   });
 
-  // Global search
+  // Global cross-module search
   const searchInput = document.getElementById('global-search');
   searchInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      const query = searchInput.value.trim();
-      if (query) {
-        router.navigate('/assistant');
-        setTimeout(() => {
-          const chatInput = document.getElementById('chat-input');
-          if (chatInput) {
-            chatInput.value = query;
-            chatInput.dispatchEvent(new Event('input'));
-          }
-        }, 300);
-      }
+      const query = searchInput.value.trim().toLowerCase();
+      if (!query) return;
+      showSearchResults(query);
     }
   });
 
@@ -192,10 +184,162 @@ function setupTopBar() {
     );
   });
 
-  // Notifications
-  document.getElementById('notifications-btn')?.addEventListener('click', () => {
-    showToast('3 new notifications', 'info');
+  // Notifications panel
+  document.getElementById('notifications-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleNotificationPanel();
   });
+}
+
+function showSearchResults(query) {
+  const emails = dataStore.getEmails().filter(e =>
+    e.subject.toLowerCase().includes(query) || e.from.toLowerCase().includes(query) || e.body.toLowerCase().includes(query)
+  );
+  const tasks = dataStore.getTasks().filter(t =>
+    t.title.toLowerCase().includes(query) || (t.tags || []).some(tag => tag.toLowerCase().includes(query))
+  );
+  const docs = dataStore.getDocuments().filter(d =>
+    d.name.toLowerCase().includes(query) || d.category.toLowerCase().includes(query)
+  );
+  const meetings = dataStore.getMeetings().filter(m =>
+    m.title.toLowerCase().includes(query) || (m.location || '').toLowerCase().includes(query)
+  );
+
+  const total = emails.length + tasks.length + docs.length + meetings.length;
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = `
+    <div class="modal" style="animation: scaleIn 0.2s var(--ease-spring); max-width: 600px; max-height: 80vh; overflow-y: auto">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4)">
+        <h2>🔍 Search Results for "${escapeHtml(query)}"</h2>
+        <button class="btn btn-ghost btn-sm" id="close-search">✕</button>
+      </div>
+      <div style="font-size: var(--text-sm); color: var(--text-tertiary); margin-bottom: var(--space-4)">${total} results found</div>
+      ${emails.length ? `
+        <div style="margin-bottom: var(--space-4)">
+          <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-muted); text-transform: uppercase; margin-bottom: var(--space-2)">📧 Emails (${emails.length})</div>
+          ${emails.slice(0, 5).map(e => `
+            <div class="search-result-item" data-goto="inbox">
+              <strong>${escapeHtml(e.subject)}</strong>
+              <span style="color: var(--text-muted); font-size: var(--text-xs)">from ${escapeHtml(e.from)}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${tasks.length ? `
+        <div style="margin-bottom: var(--space-4)">
+          <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-muted); text-transform: uppercase; margin-bottom: var(--space-2)">✅ Tasks (${tasks.length})</div>
+          ${tasks.slice(0, 5).map(t => `
+            <div class="search-result-item" data-goto="tasks">
+              <strong>${escapeHtml(t.title)}</strong>
+              <span class="badge badge-${t.priority}" style="font-size: 10px">${t.priority}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${docs.length ? `
+        <div style="margin-bottom: var(--space-4)">
+          <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-muted); text-transform: uppercase; margin-bottom: var(--space-2)">📄 Documents (${docs.length})</div>
+          ${docs.slice(0, 5).map(d => `
+            <div class="search-result-item" data-goto="documents">
+              <strong>${escapeHtml(d.name)}</strong>
+              <span style="color: var(--text-muted); font-size: var(--text-xs)">${d.category}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${meetings.length ? `
+        <div style="margin-bottom: var(--space-4)">
+          <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-muted); text-transform: uppercase; margin-bottom: var(--space-2)">📅 Meetings (${meetings.length})</div>
+          ${meetings.slice(0, 5).map(m => `
+            <div class="search-result-item" data-goto="calendar">
+              <strong>${escapeHtml(m.title)}</strong>
+              <span style="color: var(--text-muted); font-size: var(--text-xs)">${m.time} · ${m.location || 'No location'}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${total === 0 ? '<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">No results found</div></div>' : ''}
+    </div>
+  `;
+
+  const close = () => { overlay.classList.add('hidden'); overlay.innerHTML = ''; };
+  document.getElementById('close-search')?.addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  // Click result to navigate
+  overlay.querySelectorAll('.search-result-item').forEach(item => {
+    item.addEventListener('click', () => {
+      close();
+      router.navigate('/' + item.dataset.goto);
+    });
+  });
+}
+
+function toggleNotificationPanel() {
+  const existing = document.getElementById('notification-panel');
+  if (existing) { existing.remove(); return; }
+
+  const unreadEmails = dataStore.getEmails().filter(e => !e.read);
+  const urgentTasks = dataStore.getTasks().filter(t => t.priority === 'urgent' && t.status !== 'done');
+  const upcomingMeetings = dataStore.getMeetings().slice(0, 3);
+  const activities = dataStore.getActivityLog().slice(0, 5);
+
+  const notifications = [
+    ...unreadEmails.slice(0, 3).map(e => ({ icon: '📧', text: `New email from ${e.from}`, sub: e.subject, type: 'email', goto: '/inbox' })),
+    ...urgentTasks.map(t => ({ icon: '🔴', text: `Urgent: ${t.title}`, sub: t.dueDate || 'No due date', type: 'task', goto: '/tasks' })),
+    ...upcomingMeetings.map(m => ({ icon: '📅', text: m.title, sub: `${m.time} · ${m.location || ''}`, type: 'meeting', goto: '/calendar' })),
+  ];
+
+  const panel = document.createElement('div');
+  panel.id = 'notification-panel';
+  panel.className = 'notification-panel animate-fade-in-down';
+  panel.innerHTML = `
+    <div class="notif-header">
+      <span>Notifications (${notifications.length})</span>
+      <button class="btn btn-ghost btn-sm" id="close-notifs">✕</button>
+    </div>
+    <div class="notif-list">
+      ${notifications.length ? notifications.map(n => `
+        <div class="notif-item" data-goto="${n.goto}">
+          <div class="notif-icon">${n.icon}</div>
+          <div class="notif-content">
+            <div class="notif-text">${escapeHtml(n.text)}</div>
+            <div class="notif-sub">${escapeHtml(n.sub)}</div>
+          </div>
+        </div>
+      `).join('') : '<div class="empty-state" style="padding: var(--space-6)"><div class="empty-state-title">All caught up! 🎉</div></div>'}
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+
+  // Update badge
+  const badge = document.getElementById('notification-badge');
+  if (badge) badge.textContent = notifications.length;
+
+  document.getElementById('close-notifs')?.addEventListener('click', () => panel.remove());
+  panel.querySelectorAll('.notif-item').forEach(item => {
+    item.addEventListener('click', () => {
+      panel.remove();
+      router.navigate(item.dataset.goto);
+    });
+  });
+
+  // Click outside to close
+  const closeOnClick = (e) => {
+    if (!panel.contains(e.target) && !e.target.closest('#notifications-btn')) {
+      panel.remove();
+      document.removeEventListener('click', closeOnClick);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeOnClick), 100);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 function updateAutonomousUI(enabled) {

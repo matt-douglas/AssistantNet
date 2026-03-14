@@ -465,3 +465,102 @@
     padding: var(--space-4);
   }
 }
+
+/* ---- Notification Panel ---- */
+.notification-panel {
+  position: fixed;
+  top: calc(var(--topbar-height) + var(--space-2));
+  right: var(--space-6);
+  width: 380px;
+  max-height: 500px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 9500;
+  overflow: hidden;
+  animation: fadeInDown var(--duration-normal) var(--ease-out);
+}
+
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.notif-list {
+  overflow-y: auto;
+  max-height: 420px;
+}
+
+.notif-item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.05);
+}
+
+.notif-item:hover {
+  background: var(--bg-glass-hover);
+}
+
+.notif-icon {
+  font-size: var(--text-lg);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-sub {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Search Results ---- */
+.search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+  font-size: var(--text-sm);
+}
+
+.search-result-item:hover {
+  background: var(--bg-glass-hover);
+}
+
+.search-result-item strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

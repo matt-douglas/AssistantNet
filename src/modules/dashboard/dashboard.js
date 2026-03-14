@@ -11,17 +11,54 @@ export function renderDashboard(container) {
   const kpis = dataStore.getKPIs();
   const activities = dataStore.getActivityLog();
   const meetings = dataStore.getMeetings();
+  const settings = dataStore.getSettings();
   const today = new Date().toISOString().split('T')[0];
   const todayMeetings = meetings.filter(m => m.date === today);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const userName = settings.userName || 'there';
+  const showChecklist = !localStorage.getItem('assistantnet_checklist_dismissed');
+
+  // Calculate checklist progress
+  const checklistItems = [
+    { id: 'personalize', label: 'Personalize your workspace', done: settings.userName && settings.userName !== 'MD', icon: '🏢', action: 'settings' },
+    { id: 'scheduling', label: 'Set up client scheduling', done: (dataStore.data.bookings || []).length > 0, icon: '📅', action: 'scheduling' },
+    { id: 'inbox', label: 'Check your Smart Inbox', done: dataStore.getEmails().some(e => e.read), icon: '📧', action: 'inbox' },
+    { id: 'task', label: 'Create or complete a task', done: dataStore.getTasks().some(t => t.status === 'done'), icon: '✅', action: 'tasks' },
+    { id: 'calendar', label: 'Review your calendar', done: localStorage.getItem('assistantnet_viewed_calendar'), icon: '📆', action: 'calendar' },
+  ];
+  const completedCount = checklistItems.filter(i => i.done).length;
+  const progressPct = Math.round((completedCount / checklistItems.length) * 100);
 
   container.innerHTML = `
     <div class="dashboard">
       <div class="dashboard-greeting animate-fade-in-up">
-        <h1>${greeting}, MD</h1>
+        <h1>${greeting}, ${escapeHtml(userName)}</h1>
         <p>Here's your business overview for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</p>
       </div>
+
+      ${showChecklist ? `
+      <div class="card animate-fade-in-up getting-started-card" style="animation-delay: 50ms; border-color: rgba(var(--accent-primary-rgb), 0.15); background: linear-gradient(135deg, var(--bg-glass), rgba(var(--accent-primary-rgb), 0.03));">
+        <div class="card-header" style="margin-bottom: var(--space-3);">
+          <div style="flex: 1;">
+            <div class="card-title" style="display: flex; align-items: center; gap: var(--space-2);">🚀 Getting Started</div>
+            <div class="card-subtitle">${completedCount}/${checklistItems.length} complete — ${progressPct === 100 ? 'All done! 🎉' : "you're making progress!"}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="dismiss-checklist" style="font-size: var(--text-xs);">Dismiss ✕</button>
+        </div>
+        <div style="background: var(--bg-tertiary); border-radius: var(--radius-full); height: 6px; margin-bottom: var(--space-4); overflow: hidden;">
+          <div style="height: 100%; width: ${progressPct}%; background: var(--accent-gradient); border-radius: var(--radius-full); transition: width 0.5s var(--ease-out);"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-3);">
+          ${checklistItems.map(item => `
+            <div class="checklist-step ${item.done ? 'done' : ''}" data-action="${item.action}" style="text-align: center; padding: var(--space-3); border-radius: var(--radius-md); cursor: pointer; transition: all var(--duration-fast) ease; background: ${item.done ? 'rgba(34, 197, 94, 0.08)' : 'var(--bg-secondary)'}; border: 1px solid ${item.done ? 'rgba(34, 197, 94, 0.2)' : 'var(--border-subtle)'};">
+              <div style="font-size: 1.3rem; margin-bottom: var(--space-1);">${item.done ? '✅' : item.icon}</div>
+              <div style="font-size: 11px; color: ${item.done ? 'var(--color-success)' : 'var(--text-secondary)'}; line-height: 1.3;">${item.label}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
 
       <div class="kpi-grid">
         ${renderKPICard('Revenue', formatCurrency(kpis.revenue.value), kpis.revenue.change, 0)}
@@ -148,6 +185,18 @@ export function renderDashboard(container) {
 
   // Wire Daily Briefing button
   document.getElementById('qa-daily-brief')?.addEventListener('click', () => openBriefingPanel());
+
+  // Getting Started checklist
+  document.getElementById('dismiss-checklist')?.addEventListener('click', () => {
+    localStorage.setItem('assistantnet_checklist_dismissed', '1');
+    document.querySelector('.getting-started-card')?.remove();
+  });
+  container.querySelectorAll('.checklist-step').forEach(step => {
+    step.addEventListener('click', () => {
+      const action = step.dataset.action;
+      if (action) window.location.hash = '#/' + action;
+    });
+  });
 }
 
 function renderKPICard(label, value, change, index) {

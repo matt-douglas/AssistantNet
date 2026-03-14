@@ -391,49 +391,139 @@ function updateSidebarLLMStatus(connected) {
 }
 
 function showOnboardingModal() {
+  let step = 1;
   const overlay = document.getElementById('modal-overlay');
-  overlay.classList.remove('hidden');
-  overlay.innerHTML = `
-    <div class="modal" style="animation: scaleIn 0.2s var(--ease-spring); max-width: 480px">
-      <h2 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: var(--text-2xl)">Welcome to AssistantNet 🧠</h2>
-      <p style="color: var(--text-secondary); margin: var(--space-3) 0 var(--space-5)">To unlock live AI features, enter your Gemini API key. You can skip this and use built-in responses instead.</p>
-      <div class="input-group" style="margin-bottom: var(--space-5)">
-        <label class="input-label">Gemini API Key</label>
-        <input type="password" id="onboard-api-key" class="input" placeholder="Paste your API key here..." />
-        <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1)">Free from <a href='https://aistudio.google.com/' target='_blank' style='color: var(--accent-primary-hover)'>Google AI Studio</a></div>
-      </div>
-      <div style="display: flex; gap: var(--space-3); justify-content: flex-end">
-        <button class="btn btn-ghost" id="onboard-skip">Skip for now</button>
-        <button class="btn btn-primary" id="onboard-connect">🔌 Connect</button>
-      </div>
-    </div>
-  `;
+
+  function renderStep() {
+    overlay.classList.remove('hidden');
+
+    if (step === 1) {
+      overlay.innerHTML = `
+        <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 520px;">
+          <div style="text-align: center; margin-bottom: var(--space-5);">
+            <div style="font-size: 2.5rem; margin-bottom: var(--space-3);">👋</div>
+            <h2 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: var(--text-2xl); margin-bottom: var(--space-2);">Welcome to AssistantNet</h2>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm);">Your AI-powered office assistant. Let's get you set up in under a minute.</p>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-5);">
+            <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📅</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Client Scheduling</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Let clients book appointments</div>
+            </div>
+            <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📧</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Smart Inbox</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">AI-triaged email management</div>
+            </div>
+            <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">✅</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Task Engine</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Kanban boards & priorities</div>
+            </div>
+            <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📊</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Analytics</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">productivity insights</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;">
+            <div style="flex: 1; font-size: var(--text-xs); color: var(--text-muted);">Step 1 of 3</div>
+            <button class="btn btn-primary" id="onboard-next-1">Get Started →</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('onboard-next-1').addEventListener('click', () => { step = 2; renderStep(); });
+    } else if (step === 2) {
+      const settings = dataStore.getSettings();
+      overlay.innerHTML = `
+        <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 480px;">
+          <div style="text-align: center; margin-bottom: var(--space-5);">
+            <div style="font-size: 2rem; margin-bottom: var(--space-2);">🏢</div>
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Personalize your workspace</h2>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm);">We'll use this to customize your dashboard.</p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5);">
+            <div class="input-group">
+              <label class="input-label">Your Name</label>
+              <input type="text" id="onboard-name" class="input" placeholder="e.g. Alex Johnson" value="${settings.userName || ''}" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Company / Organization</label>
+              <input type="text" id="onboard-company" class="input" placeholder="e.g. Acme Corp" value="${settings.companyName || ''}" />
+            </div>
+          </div>
+          <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;">
+            <div style="flex: 1; font-size: var(--text-xs); color: var(--text-muted);">Step 2 of 3</div>
+            <button class="btn btn-ghost" id="onboard-back-2">← Back</button>
+            <button class="btn btn-primary" id="onboard-next-2">Continue →</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('onboard-back-2').addEventListener('click', () => { step = 1; renderStep(); });
+      document.getElementById('onboard-next-2').addEventListener('click', () => {
+        const name = document.getElementById('onboard-name').value.trim();
+        const company = document.getElementById('onboard-company').value.trim();
+        if (name) dataStore.updateSettings({ userName: name });
+        if (company) dataStore.updateSettings({ companyName: company });
+        step = 3; renderStep();
+      });
+    } else if (step === 3) {
+      overlay.innerHTML = `
+        <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 480px;">
+          <div style="text-align: center; margin-bottom: var(--space-5);">
+            <div style="font-size: 2rem; margin-bottom: var(--space-2);">🧠</div>
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Enable AI features</h2>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm);">Connect a Gemini API key for smart replies, summaries, and insights. You can also do this later in Settings.</p>
+          </div>
+          <div class="input-group" style="margin-bottom: var(--space-5);">
+            <label class="input-label">Gemini API Key (optional)</label>
+            <input type="password" id="onboard-api-key" class="input" placeholder="Paste your API key here..." />
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">Free from <a href='https://aistudio.google.com/' target='_blank' style='color: var(--accent-primary-hover)'>Google AI Studio</a></div>
+          </div>
+          <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;">
+            <div style="flex: 1; font-size: var(--text-xs); color: var(--text-muted);">Step 3 of 3</div>
+            <button class="btn btn-ghost" id="onboard-back-3">← Back</button>
+            <button class="btn btn-ghost" id="onboard-skip">Skip for now</button>
+            <button class="btn btn-primary" id="onboard-connect">🔌 Connect</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('onboard-back-3').addEventListener('click', () => { step = 2; renderStep(); });
+      document.getElementById('onboard-skip').addEventListener('click', close);
+
+      document.getElementById('onboard-connect').addEventListener('click', async () => {
+        const key = document.getElementById('onboard-api-key').value.trim();
+        if (!key) return;
+        const btn = document.getElementById('onboard-connect');
+        btn.disabled = true;
+        btn.textContent = '⏳ Connecting...';
+        const client = await initLLM(key);
+        if (client) {
+          dataStore.updateSettings({ llmApiKey: key });
+          updateSidebarLLMStatus(true);
+          showToast('✅ Gemini connected! AI is now live.', 'success');
+        } else {
+          showToast('Failed to connect. You can try again from Settings.', 'warning');
+        }
+        close();
+      });
+    }
+  }
 
   const close = () => {
     localStorage.setItem('assistantnet_onboarded', '1');
     overlay.classList.add('hidden');
     overlay.innerHTML = '';
+    // Refresh dashboard to use new name
+    if (currentView === '/dashboard') {
+      const container = document.getElementById('view-container');
+      VIEWS['/dashboard'].render(container);
+    }
   };
 
-  document.getElementById('onboard-skip').addEventListener('click', close);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-
-  document.getElementById('onboard-connect').addEventListener('click', async () => {
-    const key = document.getElementById('onboard-api-key').value.trim();
-    if (!key) return;
-    const btn = document.getElementById('onboard-connect');
-    btn.disabled = true;
-    btn.textContent = '⏳ Connecting...';
-    const client = await initLLM(key);
-    if (client) {
-      dataStore.updateSettings({ llmApiKey: key });
-      updateSidebarLLMStatus(true);
-      showToast('✅ Gemini connected! AI is now live.', 'success');
-    } else {
-      showToast('Failed to connect. You can try again from Settings.', 'warning');
-    }
-    close();
-  });
+  renderStep();
 }
 
 // ---- Keyboard Shortcuts ----

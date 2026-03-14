@@ -125,11 +125,11 @@ AssistantNet works out of the box with rich built-in responses (no API key requi
 ### Phase 2 — Settings & LLM Activation (v1.2)
 > Priority: Make the AI brain actually work.
 
-- [ ] Build Settings page with API key input, user name, company name
-- [ ] Persist API key to `localStorage` (encrypted or env-based option)
-- [ ] Add onboarding modal on first visit — prompt for API key
-- [ ] Show LLM connection status in sidebar (connected/fallback indicator)
-- [ ] Wire autonomous mode toggle to actually enqueue workflow items
+- [x] Build Settings page with API key input, user name, company name
+- [x] Persist API key to `localStorage` (encrypted or env-based option)
+- [x] Add onboarding modal on first visit — prompt for API key
+- [x] Show LLM connection status in sidebar (connected/fallback indicator)
+- [x] Wire autonomous mode toggle to actually enqueue workflow items
 
 ### Phase 3 — Real Module Functionality (v2.0)
 > Priority: Replace seed data with real interactions.

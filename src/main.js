@@ -13,6 +13,8 @@ import { renderInbox, destroyInbox } from './modules/inbox/inbox.js';
 import { renderCalendar, destroyCalendar } from './modules/calendar/calendar.js';
 import { renderTasks, destroyTasks } from './modules/tasks/tasks.js';
 import { renderDocuments, destroyDocuments } from './modules/documents/documents.js';
+import { renderSettings, destroySettings } from './modules/settings/settings.js';
+import { isLLMReady } from './services/llm.js';
 
 // Navigation config
 const NAV_ITEMS = [
@@ -24,6 +26,8 @@ const NAV_ITEMS = [
   { path: '/calendar', label: 'Calendar', icon: calendarIcon(), badge: null },
   { path: '/tasks', label: 'Task Engine', icon: tasksIcon(), badge: () => dataStore.getTasks().filter(t => t.priority === 'urgent' && t.status !== 'done').length || null },
   { path: '/documents', label: 'Documents', icon: documentsIcon(), badge: null },
+  { section: 'SYSTEM' },
+  { path: '/settings', label: 'Settings', icon: settingsIcon(), badge: null },
 ];
 
 // View registry
@@ -34,6 +38,7 @@ const VIEWS = {
   '/calendar': { render: renderCalendar, destroy: destroyCalendar },
   '/tasks': { render: renderTasks, destroy: destroyTasks },
   '/documents': { render: renderDocuments, destroy: destroyDocuments },
+  '/settings': { render: renderSettings, destroy: destroySettings },
 };
 
 let currentView = null;
@@ -48,14 +53,22 @@ function init() {
   // Try to init LLM from stored API key
   const settings = dataStore.getSettings();
   if (settings.llmApiKey) {
-    initLLM(settings.llmApiKey);
+    initLLM(settings.llmApiKey).then(() => updateSidebarLLMStatus(isLLMReady()));
   }
 
   // Set autonomous mode UI
   updateAutonomousUI(settings.autonomousMode);
 
+  // Expose globally for settings module
+  window.updateSidebarLLMStatus = updateSidebarLLMStatus;
+
   // Start router
   router.start();
+
+  // Show onboarding if first visit (no API key set)
+  if (!settings.llmApiKey && !localStorage.getItem('assistantnet_onboarded')) {
+    setTimeout(() => showOnboardingModal(), 800);
+  }
 }
 
 // ---- Sidebar ----
@@ -193,16 +206,66 @@ function updateAutonomousUI(enabled) {
     toggle.title = enabled ? 'Autonomous Mode: ON' : 'Autonomous Mode: OFF';
   }
   if (status) {
-    const span = status.querySelector('span');
+    const modeSpan = status.querySelector('.ai-mode-text');
     const dot = status.querySelector('.ai-pulse');
-    if (enabled) {
-      span.textContent = 'AI Active';
-      dot.style.background = 'var(--color-success)';
-    } else {
-      span.textContent = 'Manual Mode';
-      dot.style.background = 'var(--color-warning)';
-    }
+    if (modeSpan) modeSpan.textContent = enabled ? 'AI Active' : 'Manual Mode';
+    if (dot) dot.style.background = enabled ? 'var(--color-success)' : 'var(--color-warning)';
   }
+}
+
+function updateSidebarLLMStatus(connected) {
+  const llmEl = document.getElementById('llm-status-text');
+  const llmDot = document.getElementById('llm-status-dot');
+  if (llmEl) llmEl.textContent = connected ? 'Gemini Connected' : 'LLM: Fallback';
+  if (llmDot) {
+    llmDot.className = connected ? 'status-dot online' : 'status-dot offline';
+  }
+}
+
+function showOnboardingModal() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = `
+    <div class="modal" style="animation: scaleIn 0.2s var(--ease-spring); max-width: 480px">
+      <h2 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: var(--text-2xl)">Welcome to AssistantNet 🧠</h2>
+      <p style="color: var(--text-secondary); margin: var(--space-3) 0 var(--space-5)">To unlock live AI features, enter your Gemini API key. You can skip this and use built-in responses instead.</p>
+      <div class="input-group" style="margin-bottom: var(--space-5)">
+        <label class="input-label">Gemini API Key</label>
+        <input type="password" id="onboard-api-key" class="input" placeholder="Paste your API key here..." />
+        <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1)">Free from <a href='https://aistudio.google.com/' target='_blank' style='color: var(--accent-primary-hover)'>Google AI Studio</a></div>
+      </div>
+      <div style="display: flex; gap: var(--space-3); justify-content: flex-end">
+        <button class="btn btn-ghost" id="onboard-skip">Skip for now</button>
+        <button class="btn btn-primary" id="onboard-connect">🔌 Connect</button>
+      </div>
+    </div>
+  `;
+
+  const close = () => {
+    localStorage.setItem('assistantnet_onboarded', '1');
+    overlay.classList.add('hidden');
+    overlay.innerHTML = '';
+  };
+
+  document.getElementById('onboard-skip').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  document.getElementById('onboard-connect').addEventListener('click', async () => {
+    const key = document.getElementById('onboard-api-key').value.trim();
+    if (!key) return;
+    const btn = document.getElementById('onboard-connect');
+    btn.disabled = true;
+    btn.textContent = '⏳ Connecting...';
+    const client = await initLLM(key);
+    if (client) {
+      dataStore.updateSettings({ llmApiKey: key });
+      updateSidebarLLMStatus(true);
+      showToast('✅ Gemini connected! AI is now live.', 'success');
+    } else {
+      showToast('Failed to connect. You can try again from Settings.', 'warning');
+    }
+    close();
+  });
 }
 
 // ---- Keyboard Shortcuts ----
@@ -257,6 +320,9 @@ function tasksIcon() {
 }
 function documentsIcon() {
   return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h7l4 4v10a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v4h4"/><path d="M7 10h6M7 13h4"/></svg>';
+}
+function settingsIcon() {
+  return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M3.87 3.87l1.41 1.41M14.72 14.72l1.41 1.41M3.87 16.13l1.41-1.41M14.72 5.28l1.41-1.41"/></svg>';
 }
 
 // ---- Boot ----

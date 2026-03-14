@@ -29,7 +29,11 @@
       <div class="sidebar-footer">
         <div class="ai-status" id="ai-status">
           <div class="ai-pulse"></div>
-          <span>AI Active</span>
+          <span class="ai-mode-text">AI Active</span>
+        </div>
+        <div class="ai-status" style="margin-top: var(--space-2)">
+          <div class="status-dot offline" id="llm-status-dot"></div>
+          <span id="llm-status-text" style="color: var(--text-muted); font-size: var(--text-xs)">LLM: Fallback</span>
         </div>
       </div>
     </aside>

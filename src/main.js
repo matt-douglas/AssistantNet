@@ -16,6 +16,7 @@ import { renderDocuments, destroyDocuments } from './modules/documents/documents
 import { renderSettings, destroySettings } from './modules/settings/settings.js';
 import { renderAnalytics, destroyAnalytics } from './modules/analytics/analytics.js';
 import { renderContacts, destroyContacts } from './modules/contacts/contacts.js';
+import { renderScheduling, destroyScheduling } from './modules/scheduling/scheduling.js';
 import { openCommandPalette, closeCommandPalette, isCommandPaletteOpen } from './modules/command-palette/command-palette.js';
 import { isLLMReady } from './services/llm.js';
 import { checkBackend, hasBackend } from './services/api.js';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { path: '/inbox', label: 'Smart Inbox', icon: inboxIcon(), badge: () => dataStore.getEmails().filter(e => !e.read).length || null },
   { section: 'MANAGE' },
   { path: '/calendar', label: 'Calendar', icon: calendarIcon(), badge: null },
+  { path: '/scheduling', label: 'Scheduling', icon: schedulingIcon(), badge: () => (dataStore.data.bookings || []).filter(b => b.status === 'pending').length || null },
   { path: '/tasks', label: 'Task Engine', icon: tasksIcon(), badge: () => dataStore.getTasks().filter(t => t.priority === 'urgent' && t.status !== 'done').length || null },
   { path: '/documents', label: 'Documents', icon: documentsIcon(), badge: null },
   { section: 'INSIGHTS' },
@@ -48,6 +50,7 @@ const VIEWS = {
   '/settings': { render: renderSettings, destroy: destroySettings },
   '/analytics': { render: renderAnalytics, destroy: destroyAnalytics },
   '/contacts': { render: renderContacts, destroy: destroyContacts },
+  '/scheduling': { render: renderScheduling, destroy: destroyScheduling },
 };
 
 let currentView = null;
@@ -502,6 +505,9 @@ function analyticsIcon() {
 }
 function contactsIcon() {
   return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="16" cy="5" r="2"/><path d="M18 13c0-2-1-3.5-2.5-4"/></svg>';
+}
+function schedulingIcon() {
+  return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="14" height="13" rx="2"/><path d="M3 8h14M7 2v4M13 2v4"/><circle cx="10" cy="13" r="2"/><path d="M10 11v2l1.5 1"/></svg>';
 }
 
 // ---- Boot ----

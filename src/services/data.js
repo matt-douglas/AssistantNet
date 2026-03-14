@@ -2,7 +2,7 @@
 // Provides realistic seed data for all modules with localStorage persistence
 
 const STORAGE_KEY = 'assistantnet_data';
-const DATA_VERSION = 3;
+const DATA_VERSION = 4;
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
@@ -208,6 +208,21 @@ function seedChartData() {
   };
 }
 
+function seedBookings() {
+  const today = new Date();
+  function futureDate(daysAhead) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + daysAhead);
+    return d.toISOString().split('T')[0];
+  }
+  return [
+    { id: generateId(), clientName: 'Rachel Torres', clientEmail: 'rachel@sunrisemedia.co', type: 'Consultation Call', duration: 30, date: futureDate(1), time: '10:00', status: 'confirmed', location: 'Video Call', notes: 'Discuss Q2 marketing strategy', createdAt: new Date().toISOString() },
+    { id: generateId(), clientName: 'Ethan Park', clientEmail: 'epark@vanguardtech.io', type: 'Strategy Session', duration: 60, date: futureDate(2), time: '14:00', status: 'confirmed', location: 'Video Call', notes: 'Product roadmap alignment', createdAt: new Date().toISOString() },
+    { id: generateId(), clientName: 'Isabella Cruz', clientEmail: 'icruz@greenleafpartners.com', type: 'Client Onboarding', duration: 45, date: futureDate(3), time: '11:00', status: 'pending', location: 'Video Call', notes: 'New enterprise onboarding', createdAt: new Date().toISOString() },
+    { id: generateId(), clientName: 'James O\'Brien', clientEmail: 'jmo@bluepointcap.com', type: 'Consultation Call', duration: 30, date: futureDate(4), time: '15:30', status: 'confirmed', location: 'Video Call', notes: '', createdAt: new Date().toISOString() },
+  ];
+}
+
 class DataStore {
   constructor() {
     this.data = this.load();
@@ -239,6 +254,7 @@ class DataStore {
       kpis: seedKPIs(),
       activityLog: seedActivityLog(),
       chartData: seedChartData(),
+      bookings: seedBookings(),
       settings: {
         autonomousMode: true,
         llmApiKey: '',

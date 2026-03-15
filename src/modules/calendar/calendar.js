@@ -7,7 +7,7 @@ import './calendar.css';
 let currentWeekOffset = 0;
 
 export function renderCalendar(container) {
-  localStorage.setItem('assistantnet_viewed_calendar', '1');
+  localStorage.setItem('jarvis_viewed_calendar', '1');
   const meetings = dataStore.getMeetings();
   const weekDates = getWeekDates(currentWeekOffset);
   const today = new Date().toISOString().split('T')[0];

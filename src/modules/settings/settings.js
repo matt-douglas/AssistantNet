@@ -1,4 +1,4 @@
-// AssistantNet — Settings Module
+// J.A.R.V.I.S. — Settings Module
 import { dataStore } from '../../services/data.js';
 import { initLLM, isLLMReady } from '../../services/llm.js';
 import { showToast } from '../../main.js';
@@ -12,7 +12,7 @@ export function renderSettings(container) {
     <div class="settings-view">
       <div class="settings-header animate-fade-in">
         <h1>⚙️ Settings</h1>
-        <p>Configure your AssistantNet experience</p>
+        <p>Configure your J.A.R.V.I.S. systems</p>
       </div>
 
       <div class="settings-grid">
@@ -22,7 +22,7 @@ export function renderSettings(container) {
             <div class="settings-section-icon">👤</div>
             <div>
               <div class="settings-section-title">Profile</div>
-              <div class="settings-section-desc">Your identity within AssistantNet</div>
+              <div class="settings-section-desc">Your identity</div>
             </div>
           </div>
           <div class="settings-fields">
@@ -31,8 +31,8 @@ export function renderSettings(container) {
               <input type="text" id="setting-username" class="input" value="${escapeAttr(settings.userName)}" placeholder="MD" />
             </div>
             <div class="input-group">
-              <label class="input-label">Business Name</label>
-              <input type="text" id="setting-company" class="input" value="${escapeAttr(settings.companyName)}" placeholder="Your Business" />
+              <label class="input-label">Workspace Name</label>
+              <input type="text" id="setting-company" class="input" value="${escapeAttr(settings.companyName)}" placeholder="Your Workspace" />
             </div>
             <div class="input-group">
               <label class="input-label">Business Type</label>
@@ -132,6 +132,29 @@ export function renderSettings(container) {
             <button class="btn btn-danger btn-sm" id="reset-data-btn">🗑️ Reset All Data</button>
           </div>
         </div>
+
+        <!-- Demo Mode Section -->
+        <div class="settings-section card animate-fade-in-up" style="animation-delay: 360ms">
+          <div class="settings-section-header">
+            <div class="settings-section-icon">🎭</div>
+            <div>
+              <div class="settings-section-title">Demo Mode</div>
+              <div class="settings-section-desc">Switch between sample data and your real workspace</div>
+            </div>
+          </div>
+          <div class="settings-fields">
+            <div class="settings-toggle-row">
+              <div>
+                <div class="settings-toggle-label">Demo Data</div>
+                <div class="settings-toggle-desc">Load rich sample data for exploring features. Your real data will be preserved when switching back.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-demo-mode" ${dataStore.isDemoMode() ? 'checked' : ''} />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Save bar -->
@@ -182,8 +205,8 @@ function bindSettingsEvents() {
 
   // Save settings
   document.getElementById('save-settings-btn')?.addEventListener('click', async () => {
-    const userName = document.getElementById('setting-username').value.trim() || 'MD';
-    const companyName = document.getElementById('setting-company').value.trim() || 'Your Business';
+    const userName = document.getElementById('setting-username').value.trim();
+    const companyName = document.getElementById('setting-company').value.trim();
     const apiKey = document.getElementById('setting-api-key').value.trim();
     const autonomousMode = document.getElementById('setting-autonomous').checked;
     const businessType = document.getElementById('setting-biz-type')?.value || 'general';
@@ -241,6 +264,19 @@ function bindSettingsEvents() {
         overlay.innerHTML = '';
       }
     });
+  });
+
+  // Demo mode toggle
+  document.getElementById('setting-demo-mode')?.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    if (enabled) {
+      dataStore.enableDemoMode();
+      showToast('🎭 Demo mode enabled — sample data loaded', 'info');
+    } else {
+      dataStore.disableDemoMode();
+      showToast('🚀 Demo mode disabled — clean workspace loaded', 'info');
+    }
+    renderSettings(document.getElementById('view-container'));
   });
 }
 

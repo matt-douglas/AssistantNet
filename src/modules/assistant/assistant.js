@@ -1,4 +1,4 @@
-// AssistantNet — AI Command Center Module
+// J.A.R.V.I.S. — AI Assistant Chat Module
 import { streamChat } from '../../services/llm.js';
 import { dataStore } from '../../services/data.js';
 import { escapeHtml } from '../../services/utils.js';

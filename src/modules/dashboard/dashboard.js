@@ -1,4 +1,4 @@
-// AssistantNet — Dashboard Module (Executive Command Center)
+// J.A.R.V.I.S. — Dashboard Module (Command Center)
 import { dataStore } from '../../services/data.js';
 import { quickAction, isLLMReady } from '../../services/llm.js';
 import { escapeHtml } from '../../services/utils.js';
@@ -17,7 +17,7 @@ export function renderDashboard(container) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const userName = settings.userName || 'there';
-  const showChecklist = !localStorage.getItem('assistantnet_checklist_dismissed');
+  const showChecklist = !localStorage.getItem('jarvis_checklist_dismissed');
 
   // Calculate checklist progress
   const checklistItems = [
@@ -25,7 +25,7 @@ export function renderDashboard(container) {
     { id: 'scheduling', label: 'Set up client scheduling', done: (dataStore.data.bookings || []).length > 0, icon: '📅', action: 'scheduling' },
     { id: 'inbox', label: 'Check your Smart Inbox', done: dataStore.getEmails().some(e => e.read), icon: '📧', action: 'inbox' },
     { id: 'task', label: 'Create or complete a task', done: dataStore.getTasks().some(t => t.status === 'done'), icon: '✅', action: 'tasks' },
-    { id: 'calendar', label: 'Review your calendar', done: localStorage.getItem('assistantnet_viewed_calendar'), icon: '📆', action: 'calendar' },
+    { id: 'calendar', label: 'Review your calendar', done: localStorage.getItem('jarvis_viewed_calendar'), icon: '📆', action: 'calendar' },
   ];
   const completedCount = checklistItems.filter(i => i.done).length;
   const progressPct = Math.round((completedCount / checklistItems.length) * 100);
@@ -34,7 +34,7 @@ export function renderDashboard(container) {
     <div class="dashboard">
       <div class="dashboard-greeting animate-fade-in-up">
         <h1>${greeting}, ${escapeHtml(userName)}</h1>
-        <p>Here's your ${({dental:'practice',barber:'shop',restaurant:'service',fitness:'studio'})[settings.businessType] || 'business'} overview for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</p>
+        <p>Here's your status update for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</p>
       </div>
 
       ${showChecklist ? `
@@ -173,7 +173,7 @@ export function renderDashboard(container) {
 
   // Getting Started checklist
   document.getElementById('dismiss-checklist')?.addEventListener('click', () => {
-    localStorage.setItem('assistantnet_checklist_dismissed', '1');
+    localStorage.setItem('jarvis_checklist_dismissed', '1');
     document.querySelector('.getting-started-card')?.remove();
   });
   container.querySelectorAll('.checklist-step').forEach(step => {

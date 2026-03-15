@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AssistantNet — Autonomous Office Assistant</title>
-  <meta name="description" content="AI-powered autonomous office assistant portal. Manage emails, calendar, tasks, documents, and analytics with intelligent automation." />
+  <title>J.A.R.V.I.S. — Your Personal AI Command Center</title>
+  <meta name="description" content="J.A.R.V.I.S. — AI-powered personal command center. Manage tasks, calendar, documents, inbox, and analytics with intelligent automation." />
   <meta name="theme-color" content="#0a0e1a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
 </head>
 <body>
   <div id="app">
@@ -18,22 +18,23 @@
         <div class="logo-icon">
           <svg viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="14" stroke="url(#logoGrad)" stroke-width="2.5"/>
-            <path d="M10 16h12M16 10v12" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="16" cy="16" r="4" fill="url(#logoGrad)" opacity="0.6"/>
-            <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
+            <circle cx="16" cy="16" r="8" stroke="url(#logoGrad)" stroke-width="1.5" opacity="0.4"/>
+            <circle cx="16" cy="16" r="4" fill="url(#logoGrad)" opacity="0.8"/>
+            <circle cx="16" cy="16" r="2" fill="#fff" opacity="0.9"/>
+            <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6366f1"/><stop offset="0.5" stop-color="#06b6d4"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
           </svg>
         </div>
-        <span class="logo-text">AssistantNet</span>
+        <span class="logo-text">J.A.R.V.I.S.</span>
       </div>
       <nav class="sidebar-nav" id="sidebar-nav"></nav>
       <div class="sidebar-footer">
         <div class="ai-status" id="ai-status">
           <div class="ai-pulse"></div>
-          <span class="ai-mode-text">AI Active</span>
+          <span class="ai-mode-text">J.A.R.V.I.S. Online</span>
         </div>
         <div class="ai-status" style="margin-top: var(--space-2)">
           <div class="status-dot offline" id="llm-status-dot"></div>
-          <span id="llm-status-text" style="color: var(--text-muted); font-size: var(--text-xs)">LLM: Fallback</span>
+          <span id="llm-status-text" style="color: var(--text-muted); font-size: var(--text-xs)">Core: Local Mode</span>
         </div>
       </div>
     </aside>
@@ -45,7 +46,7 @@
           </button>
           <div class="search-bar">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <input type="text" id="global-search" placeholder="Search anything..." autocomplete="off" />
+            <input type="text" id="global-search" placeholder="Ask J.A.R.V.I.S. anything..." autocomplete="off" />
             <kbd style="font-family: var(--font-sans); font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-medium); color: var(--text-muted); background: var(--bg-tertiary); white-space: nowrap; flex-shrink: 0;">⌘K</kbd>
           </div>
         </div>
@@ -61,7 +62,7 @@
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5v2.25M9 14.25v2.25M3.75 9H1.5M16.5 9h-2.25M4.7 4.7L3.1 3.1M14.9 14.9l-1.6-1.6M4.7 13.3l-1.6 1.6M14.9 3.1l-1.6 1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
           </button>
           <div class="user-avatar" id="user-avatar">
-            <span id="user-initials">MD</span>
+            <span id="user-initials">?</span>
           </div>
         </div>
       </header>

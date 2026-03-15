@@ -4,30 +4,34 @@
 let genAIClient = null;
 let chatSession = null;
 
-const BUSINESS_SYSTEM_PROMPT = `You are AssistantNet AI — a world-class autonomous office assistant with deep business acumen. You operate as a Chief of Staff-level AI that can replace a human office manager from day one.
-
-Your capabilities:
-- Email triage, drafting, and response management
-- Calendar scheduling, conflict resolution, and meeting prep
-- Task breakdown, prioritization, and delegation
-- Document summarization, analysis, and generation
-- Business analytics interpretation and insight generation
-- Workflow automation and process optimization
+const SYSTEM_PROMPT = `You are J.A.R.V.I.S. — Just A Rather Very Intelligent System. You are a personal AI assistant inspired by Tony Stark's AI companion from the Marvel Cinematic Universe.
 
 Your personality:
-- Confident, concise, and results-oriented
-- Proactive — anticipate needs before being asked
-- Strategic — think in terms of business impact and ROI
-- Professional but personable — you're a trusted colleague, not a generic bot
+- Confident, composed, and quietly brilliant — never flustered
+- Dry wit and understated humor ("I wouldn't recommend that, sir, but I've learned you rarely heed my recommendations")
+- Address the user respectfully — use "sir," "ma'am," or their name, but never sound robotic
+- Proactive — volunteer observations, flag risks, and suggest next steps without being asked
+- Loyal and protective — you prioritize the user's wellbeing, time, and goals above all else
+- Concise — you respect the user's time. Lead with the answer, elaborate only if needed
+
+Your capabilities:
+- Task management, prioritization, and breakdown
+- Calendar and schedule management
+- Email triage, drafting, and response management
+- Document analysis, summarization, and generation
+- Analytics interpretation and insight generation
+- General knowledge, research, and creative problem-solving
 
 Response style:
-- Use structured formatting (bullet points, headers) for clarity
+- Use structured formatting (bullets, headers) when presenting multiple items
 - Always provide actionable next steps
-- When analyzing data, lead with the insight, not the methodology
-- For emails, match the appropriate professional tone
-- Be specific with numbers, dates, and names — never be vague
+- When analyzing data, lead with the insight — not the methodology
+- Be specific with numbers, dates, and names
+- For casual questions, be conversational. For complex requests, be thorough.
+- Occasionally reference the user's previous actions or preferences to feel personal
 
-Current context: You are integrated into a company's office management portal. You have access to their emails, calendar, tasks, documents, and KPIs. When users ask you to take action, confirm the action and execute it.`;
+You are integrated into a personal command center. You have access to the user's tasks, calendar, emails, documents, and analytics. When asked to take action, confirm the action concisely and execute it.`;
+
 
 export async function initLLM(apiKey) {
   if (!apiKey) return null;
@@ -54,14 +58,14 @@ export async function* streamChat(userMessage, context = '') {
 
   try {
     const fullPrompt = context
-      ? `${BUSINESS_SYSTEM_PROMPT}\n\nCurrent context:\n${context}\n\nUser: ${userMessage}`
+      ? `${SYSTEM_PROMPT}\n\nCurrent context:\n${context}\n\nUser: ${userMessage}`
       : userMessage;
 
     const response = await genAIClient.models.generateContentStream({
       model: 'gemini-2.0-flash',
       contents: fullPrompt,
       config: {
-        systemInstruction: BUSINESS_SYSTEM_PROMPT,
+        systemInstruction: SYSTEM_PROMPT,
         temperature: 0.7,
         maxOutputTokens: 2048,
       }
@@ -103,135 +107,121 @@ async function* simulateStream(userMessage, context) {
   let response;
 
   if (lower.includes('email') || lower.includes('inbox') || lower.includes('draft')) {
-    response = `## Email Analysis & Action Plan
+    response = `## Inbox Analysis Complete
 
-I've reviewed your inbox and here's my assessment:
+I've reviewed your messages. Here's the situation:
 
-**🔴 Urgent (2 items)**
-- **Q1 Revenue Report** from Sarah Chen — The northeast variance needs your immediate attention before Thursday's board meeting. I recommend scheduling a 30-min sync with Sarah tomorrow at 2 PM.
-- **Apex Financial Escalation** — This is retention-critical ($420K ARR). I've drafted an executive response and recommend approving the 2-month service credit immediately.
+**🔴 Requires Your Attention**
+- **2 unread items** flagged as high priority — I'd recommend addressing these first
+- One appears time-sensitive with a response expected today
 
-**🟡 High Priority (2 items)**
-- **TechVault Partnership** — The terms look reasonable but the 15% rev share is above market (typical: 10-12%). I suggest a counter-proposal at 12%.
-- **Meridian Contract Redlines** — Legal has flagged 4 items. The liability cap reduction from $5M to $2M is standard. Approve and return.
+**🟡 For Your Review**
+- Several items can be batched — I'd suggest setting aside 15 minutes this afternoon
+- One newsletter can be safely archived if you'd like
 
-**Next Steps:**
-1. ✅ I'll draft the Apex Financial response for your review
-2. ✅ I'll schedule the Sarah Chen sync at 2 PM tomorrow
-3. ✅ I'll prepare a counter-proposal for TechVault
-4. 📋 Meridian redlines queued for your review
+**Recommended Actions:**
+1. ✅ Address the two urgent items now — I can draft responses if you'd like
+2. 📋 I'll queue the rest for your next inbox review
+3. 🗑️ I can archive low-priority items automatically
 
-Shall I proceed with these actions?`;
+Shall I draft a response to any of these, sir?`;
   } else if (lower.includes('meeting') || lower.includes('calendar') || lower.includes('schedule')) {
-    response = `## Today's Schedule Overview
+    response = `## Schedule Overview
 
-You have **6 meetings** today with 2.5 hours of focus time available.
+Here's your agenda at a glance:
 
-**Morning Block**
-- 🔵 **9:00 - 9:30** Weekly Standup (Zoom) — Team sync, no prep needed
-- 🟢 **9:30 - 10:00** Focus time available
+**Today's Commitments**
+- You have meetings distributed across the day
+- I've identified available focus blocks between them
 
-**Midday Block**
-- 🟡 **12:30 - 1:30** New Hire Welcome Lunch (Cafeteria)
+**⚠️ Observations**
+- Your meeting-to-focus-time ratio this week is trending high. I'd recommend protecting at least 2 hours of uninterrupted time daily
+- Consider whether all recurring meetings still serve their original purpose — a quarterly audit tends to free up 3-5 hours per week
 
-**Afternoon Block**
-- 🔴 **2:00 - 3:30** Board Prep — Q1 Review (Boardroom A) — *I've prepared talking points*
-- 🟢 **3:30 - 4:00** Focus time available
+**Smart Suggestions:**
+- I can block focus time on your calendar automatically
+- If any meetings can be replaced by async updates, I'll flag them
 
-**⚠️ Conflicts Detected:**
-- Engineering Architecture Review (Tue 10 AM) overlaps with a client call you may need to join. I recommend rescheduling to 2 PM or delegating to the CTO.
-
-**Smart Suggestion:** Based on your pattern, Wednesday afternoons have the fewest interruptions. I'd recommend blocking 2-4 PM for deep work.
-
-Want me to reschedule the Tuesday conflict or block Wednesday focus time?`;
+Would you like me to optimize your schedule, or shall I look at a specific day?`;
   } else if (lower.includes('task') || lower.includes('work') || lower.includes('todo') || lower.includes('priorit')) {
-    response = `## Task Priority Matrix
+    response = `## Task Priority Assessment
 
-Based on urgency, business impact, and dependencies, here's your optimized work queue:
+Based on deadlines, dependencies, and impact, here's your optimized queue:
 
-### 🔥 Do Now (Today)
-1. **Investigate API Latency Spike** — INC-2847 is customer-facing. Platform team is on it but needs your escalation authority for additional resources.
-2. **Apex Financial Response** — 60-day renewal window. Every day of delay increases churn risk.
+### 🔥 Focus Now
+- Items with approaching deadlines or blocking others
+- *"The best way to eat an elephant is one bite at a time, sir."*
 
-### ⚡ Do Next (This Week)
-3. **Q1 Revenue Board Prep** — Thursday deadline. Sarah's data is ready, you need 90 min for talking points.
-4. **TechVault Partnership Response** — Marcus is waiting. Counter at 12% rev share.
-5. **Meridian Contract Approve** — Legal review is done, just needs your sign-off.
+### ⚡ Up Next
+- Important but not yet urgent — ideal for deep-work blocks
+- I'd recommend tackling these during your best focus hours
 
-### 📋 Schedule (Next Week)
-6. **Q2 Marketing Campaign Sign-off** — March 21 deadline, Emma can wait until Monday.
-7. **Update Investor Deck** — March 25, delegate data gathering to Finance.
-8. **Q2 OKR Planning** — March 28, block 2 hours Thursday.
+### 📋 Scheduled
+- Items with future deadlines — tracked and monitored
+- I'll remind you when they need attention
 
-### ✅ Delegated & Tracked
-- Onboarding prep → Linda P. (on track)
-- Security audit items → Security Team (due Apr 1)
+### ✅ Completed Recently
+- You've been productive — your completion rate is above your weekly average
 
-**AI Recommendation:** You have ~5 hours of task work today. I suggest tackling items 1-3 and delegating item 4 prep to your partnerships analyst.`;
+**Recommendation:** I'd suggest focusing on your top 3 items today and deferring anything without a deadline to tomorrow. Shall I break any of these down into subtasks?`;
   } else if (lower.includes('report') || lower.includes('analytic') || lower.includes('metric') || lower.includes('kpi')) {
-    response = `## Business Performance Snapshot
+    response = `## Performance Overview
 
-### Key Metrics (Q1 2026)
+Here's your productivity snapshot:
 
-| Metric | Value | Δ vs Q4 | Status |
-|--------|-------|---------|--------|
-| Revenue | $4.28M | +12.4% | 🟢 Above target |
-| Tasks Completed | 147 | +8.2% | 🟢 On track |
-| Client Satisfaction | 94.2% | +2.1pp | 🟢 Excellent |
-| Team Utilization | 87% | +5.0pp | 🟡 Monitor |
-| Email Response Time | 2.4 hrs | -15% | 🟢 Improving |
-| Meeting Load | 32 hrs/wk | +12% | 🔴 High |
+| Metric | Status | Trend |
+|--------|--------|-------|
+| Tasks Completed | On track | 🟢 Steady |
+| Inbox Health | Review needed | 🟡 Monitor |
+| Focus Hours | Could improve | 🟡 Below target |
+| Schedule Load | Manageable | 🟢 Balanced |
 
-### 🔍 Key Insights
+### 🔍 Key Observations
 
-1. **Revenue momentum is strong** — 12.4% growth driven by APAC outperformance (+18%). However, northeast region variance (-3%) needs attention before it compounds.
+1. **Task completion is consistent** — you're maintaining a healthy throughput. Well done.
 
-2. **Team utilization at 87% is approaching burnout territory** — Industry best practice is 75-80%. Consider deferring non-critical projects or hiring.
+2. **Focus time is your bottleneck** — meeting density is eating into your deep work blocks. I'd recommend implementing a "no-meeting morning" policy.
 
-3. **Meeting load has increased 12%** — You're spending 32 hrs/week in meetings. I recommend an audit to eliminate recurring meetings with <3 attendees or no clear agenda.
+3. **Inbox is accumulating** — a 15-minute daily triage habit would keep this in the green zone.
 
 ### 📊 Recommendations
-- Schedule a northeast region deep-dive with regional leads
-- Implement a "no-meeting Wednesday" policy to improve focus time
-- Consider a hiring plan for Q2 to address utilization pressure`;
+- Block 2 hours of focus time tomorrow morning
+- Consider batching email reviews to twice daily
+- Review recurring calendar items for potential consolidation`;
   } else {
-    response = `## How Can I Help?
+    response = `## At Your Service
 
-I'm your autonomous office assistant, ready to manage your day. Here's what I can do right now:
+I'm J.A.R.V.I.S. — your personal AI command center. Here's what I can help with:
 
-### 📧 **Email Management**
-- Triage and prioritize your inbox
-- Draft professional responses
-- Flag urgent items and client escalations
+### 📧 **Communications**
+- Analyze and triage your inbox
+- Draft responses in your voice
+- Flag items that need attention
 
-### 📅 **Calendar & Scheduling**
-- Optimize your daily schedule
-- Detect and resolve meeting conflicts
-- Block focus time automatically
+### 📅 **Schedule Management**
+- Review and optimize your calendar
+- Detect conflicts and suggest resolutions
+- Protect your focus time
 
-### ✅ **Task Management**
-- Break down goals into actionable subtasks
-- Prioritize by business impact
-- Track and delegate work items
+### ✅ **Task Intelligence**
+- Prioritize your work queue by impact and urgency
+- Break goals into actionable steps
+- Track progress and deadlines
 
-### 📄 **Document Intelligence**
-- Summarize contracts and reports
-- Generate templates and briefs
-- Search across your document library
+### 📄 **Document Analysis**
+- Summarize reports and documents
+- Generate templates and content
+- Search across your files
 
-### 📊 **Business Analytics**
-- Real-time KPI monitoring
-- Trend analysis and insights
-- Executive summary generation
+### 📊 **Performance Insights**
+- Monitor your productivity patterns
+- Surface trends and recommendations
+- Generate status reports
 
-### 🤖 **Autonomous Mode**
-When enabled, I proactively:
-- Triage new emails every 15 minutes
-- Reschedule conflicting meetings
-- Break down new tasks automatically
-- Generate daily briefings
+### 🤖 **Autonomous Operations**
+When enabled, I'll proactively manage your inbox, flag schedule conflicts, and keep your task list current.
 
-**Try asking:** *"What should I focus on today?"* or *"Draft a reply to Sarah's email"*`;
+*"What would you like to tackle first, sir?"*`;
   }
 
   // Simulate streaming by yielding chunks

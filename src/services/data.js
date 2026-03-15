@@ -235,7 +235,7 @@ class DataStore {
         const data = JSON.parse(saved);
         // Force re-seed if data version is outdated
         if (data._version !== DATA_VERSION) {
-          console.log('AssistantNet: Data schema upgraded, re-seeding...');
+          console.log('J.A.R.V.I.S.: Data schema upgraded, re-seeding...');
           return this.seed();
         }
         return data;
@@ -244,9 +244,16 @@ class DataStore {
     return this.seed();
   }
 
-  seed() {
-    const data = {
+  seed(demo = true) {
+    const data = demo ? this.demoData() : this.cleanData();
+    this.save(data);
+    return data;
+  }
+
+  demoData() {
+    return {
       _version: DATA_VERSION,
+      demoMode: true,
       emails: seedEmails(),
       meetings: seedMeetings(),
       tasks: seedTasks(),
@@ -258,12 +265,99 @@ class DataStore {
       settings: {
         autonomousMode: true,
         llmApiKey: '',
-        userName: 'MD',
-        companyName: 'Your Company'
+        userName: '',
+        companyName: ''
       }
     };
-    this.save(data);
-    return data;
+  }
+
+  cleanData() {
+    return {
+      _version: DATA_VERSION,
+      demoMode: false,
+      emails: [
+        {
+          id: generateId(), from: 'J.A.R.V.I.S.', email: 'jarvis@system',
+          subject: 'Welcome — All Systems Online',
+          preview: 'Good day. All systems are initialized and awaiting your command...',
+          body: 'Good day, sir.\n\nAll systems are online and operating at peak efficiency. Here\'s a quick overview of what I can do for you:\n\n**📧 Communications** — I\'ll manage your inbox, draft responses, and flag what matters.\n**📅 Schedule** — Calendar management, conflict detection, and focus time protection.\n**✅ Tasks** — Priority-ranked task management with subtask breakdown.\n**📄 Documents** — File organization, search, and template generation.\n**📊 Analytics** — Productivity insights and performance tracking.\n\nYou can start by creating your first task, adding a calendar event, or simply asking me anything via the AI Assistant.\n\nAt your service,\nJ.A.R.V.I.S.',
+          time: 'Just now', priority: 'low', read: false, starred: true, category: 'system',
+          avatar: '⚡'
+        }
+      ],
+      meetings: [],
+      tasks: [
+        { id: generateId(), title: 'Set up your J.A.R.V.I.S. workspace', status: 'in-progress', priority: 'medium', assignee: 'You', dueDate: 'Today', tags: ['onboarding'], subtasks: [
+          { title: 'Configure your profile in Settings', done: false },
+          { title: 'Add your first calendar event', done: false },
+          { title: 'Try the AI Assistant', done: false }
+        ]},
+      ],
+      documents: [],
+      kpis: {
+        tasksCompleted: { value: 0, change: 0, label: 'Tasks Done', prefix: '', format: 'number' },
+        focusHours: { value: 0, change: 0, label: 'Focus Hours', prefix: '', suffix: 'h', format: 'number' },
+        inboxZero: { value: 100, change: 0, label: 'Inbox Zero', prefix: '', suffix: '%', format: 'percent' },
+        meetingsToday: { value: 0, change: 0, label: 'Meetings Today', prefix: '', format: 'number' },
+      },
+      activityLog: [
+        { id: generateId(), text: 'J.A.R.V.I.S. initialized — all systems online', time: 'Just now', icon: '⚡', badge: 'system' },
+        { id: generateId(), text: 'Workspace configured and ready for use', time: 'Just now', icon: '🚀', badge: 'system' },
+      ],
+      chartData: {
+        weeklyTasks: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+          datasets: [
+            { label: 'Completed', data: [0, 0, 0, 0, 0], color: '#6366f1' },
+            { label: 'Created', data: [0, 0, 0, 0, 0], color: '#06b6d4' },
+          ]
+        },
+        emailVolume: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          data: [0, 0, 0, 0, 0, 0, 0]
+        },
+        taskDistribution: {
+          labels: ['Personal', 'Work', 'Learning', 'Health', 'Finance', 'Other'],
+          data: [0, 0, 0, 0, 0, 0],
+          colors: ['#6366f1', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6']
+        },
+        revenueByMonth: {
+          labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+          data: [0, 0, 0, 0, 0, 0]
+        }
+      },
+      bookings: [],
+      settings: {
+        autonomousMode: true,
+        llmApiKey: '',
+        userName: '',
+        companyName: ''
+      }
+    };
+  }
+
+  enableDemoMode() {
+    // Preserve settings (name, API key, etc.) but load demo data
+    const currentSettings = { ...this.data.settings };
+    this.data = this.demoData();
+    this.data.settings = currentSettings;
+    this.data.demoMode = true;
+    this.save();
+    return this.data;
+  }
+
+  disableDemoMode() {
+    // Preserve settings but start clean
+    const currentSettings = { ...this.data.settings };
+    this.data = this.cleanData();
+    this.data.settings = currentSettings;
+    this.data.demoMode = false;
+    this.save();
+    return this.data;
+  }
+
+  isDemoMode() {
+    return this.data.demoMode !== false;
   }
 
   save(data) {
@@ -274,7 +368,7 @@ class DataStore {
   }
 
   reset() {
-    this.data = this.seed();
+    this.data = this.seed(this.isDemoMode());
     return this.data;
   }
 
@@ -337,3 +431,4 @@ class DataStore {
 
 export const dataStore = new DataStore();
 export default dataStore;
+

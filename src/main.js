@@ -60,7 +60,7 @@ let currentView = null;
 async function init() {
   // Detect backend
   await checkBackend();
-  console.log(`🧠 AssistantNet booting — Backend: ${hasBackend() ? '✅ Connected' : '⚠️ Offline (localStorage mode)'}`);
+  console.log(`⚡ J.A.R.V.I.S. booting — Backend: ${hasBackend() ? '✅ Connected' : '⚠️ Offline (localStorage mode)'}`);
 
   buildSidebar();
   setupRouter();
@@ -84,7 +84,7 @@ async function init() {
   router.start();
 
   // Show onboarding if first visit (no API key set)
-  if (!settings.llmApiKey && !localStorage.getItem('assistantnet_onboarded')) {
+  if (!settings.llmApiKey && !localStorage.getItem('jarvis_onboarded')) {
     setTimeout(() => showOnboardingModal(), 800);
   }
 }
@@ -218,7 +218,7 @@ function setupTopBar() {
 
   // Theme toggle
   const themeToggle = document.getElementById('theme-toggle');
-  const savedTheme = localStorage.getItem('assistantnet_theme') || 'dark';
+  const savedTheme = localStorage.getItem('jarvis_theme') || 'dark';
   if (savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
   updateThemeIcon(savedTheme);
 
@@ -226,7 +226,7 @@ function setupTopBar() {
     const current = document.documentElement.getAttribute('data-theme') || 'dark';
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('assistantnet_theme', next);
+    localStorage.setItem('jarvis_theme', next);
     updateThemeIcon(next);
     showToast(next === 'light' ? '☀️ Light mode activated' : '🌙 Dark mode activated', 'info');
   });
@@ -411,7 +411,7 @@ function updateAutonomousUI(enabled) {
   if (status) {
     const modeSpan = status.querySelector('.ai-mode-text');
     const dot = status.querySelector('.ai-pulse');
-    if (modeSpan) modeSpan.textContent = enabled ? 'AI Active' : 'Manual Mode';
+    if (modeSpan) modeSpan.textContent = enabled ? 'J.A.R.V.I.S. Online' : 'J.A.R.V.I.S. Standby';
     if (dot) dot.style.background = enabled ? 'var(--color-success)' : 'var(--color-warning)';
   }
 }
@@ -419,7 +419,7 @@ function updateAutonomousUI(enabled) {
 function updateSidebarLLMStatus(connected) {
   const llmEl = document.getElementById('llm-status-text');
   const llmDot = document.getElementById('llm-status-dot');
-  if (llmEl) llmEl.textContent = connected ? 'Gemini Connected' : 'LLM: Fallback';
+  if (llmEl) llmEl.textContent = connected ? 'Core: Gemini Online' : 'Core: Local Mode';
   if (llmDot) {
     llmDot.className = connected ? 'status-dot online' : 'status-dot offline';
   }
@@ -428,6 +428,7 @@ function updateSidebarLLMStatus(connected) {
 function showOnboardingModal() {
   let step = 1;
   const overlay = document.getElementById('modal-overlay');
+  let selectedMode = 'demo'; // default to demo
 
   function renderStep() {
     overlay.classList.remove('hidden');
@@ -436,86 +437,73 @@ function showOnboardingModal() {
       overlay.innerHTML = `
         <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 520px;">
           <div style="text-align: center; margin-bottom: var(--space-5);">
-            <div style="font-size: 2.5rem; margin-bottom: var(--space-3);">👋</div>
-            <h2 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: var(--text-2xl); margin-bottom: var(--space-2);">Welcome to AssistantNet</h2>
-            <p style="color: var(--text-secondary); font-size: var(--text-sm);">Your AI-powered office assistant. Let's get you set up in under a minute.</p>
+            <div style="font-size: 3rem; margin-bottom: var(--space-3); filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.5));">⚡</div>
+            <h2 style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: var(--text-2xl); margin-bottom: var(--space-2);">Initializing J.A.R.V.I.S.</h2>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm);">Just A Rather Very Intelligent System — your personal AI command center.</p>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-5);">
             <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📅</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Client Scheduling</div>
-              <div style="font-size: var(--text-xs); color: var(--text-muted);">Let clients book appointments</div>
+              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📧</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Communications</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Inbox triage & smart drafts</div>
             </div>
             <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📧</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Smart Inbox</div>
-              <div style="font-size: var(--text-xs); color: var(--text-muted);">AI-triaged email management</div>
+              <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📅</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Schedule</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Calendar & focus time</div>
             </div>
             <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">✅</div>
               <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Task Engine</div>
-              <div style="font-size: var(--text-xs); color: var(--text-muted);">Kanban boards & priorities</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Priority-ranked Kanban</div>
             </div>
             <div style="padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div style="font-size: 1.2rem; margin-bottom: var(--space-1);">📊</div>
               <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Analytics</div>
-              <div style="font-size: var(--text-xs); color: var(--text-muted);">productivity insights</div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted);">Productivity insights</div>
             </div>
           </div>
           <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;">
             <div style="flex: 1; font-size: var(--text-xs); color: var(--text-muted);">Step 1 of 3</div>
-            <button class="btn btn-primary" id="onboard-next-1">Get Started →</button>
+            <button class="btn btn-primary" id="onboard-next-1">Initialize →</button>
           </div>
         </div>
       `;
       document.getElementById('onboard-next-1').addEventListener('click', () => { step = 2; renderStep(); });
     } else if (step === 2) {
       const settings = dataStore.getSettings();
-      const currentType = settings.businessType || '';
       overlay.innerHTML = `
         <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 540px;">
           <div style="text-align: center; margin-bottom: var(--space-5);">
-            <div style="font-size: 2rem; margin-bottom: var(--space-2);">🏢</div>
-            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Tell us about your business</h2>
-            <p style="color: var(--text-secondary); font-size: var(--text-sm);">We'll customize your scheduling, labels, and appointments to match.</p>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-5);">
-            <div class="biz-type-option ${currentType === 'dental' ? 'selected' : ''}" data-biz="dental" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
-              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🦷</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Dental</div>
-            </div>
-            <div class="biz-type-option ${currentType === 'barber' ? 'selected' : ''}" data-biz="barber" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
-              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">💈</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Barber / Salon</div>
-            </div>
-            <div class="biz-type-option ${currentType === 'restaurant' ? 'selected' : ''}" data-biz="restaurant" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
-              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🍽️</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Restaurant</div>
-            </div>
-            <div class="biz-type-option ${currentType === 'consulting' ? 'selected' : ''}" data-biz="consulting" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
-              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">💼</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Consulting</div>
-            </div>
-            <div class="biz-type-option ${currentType === 'fitness' ? 'selected' : ''}" data-biz="fitness" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
-              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🏋️</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Fitness</div>
-            </div>
-            <div class="biz-type-option ${currentType === 'general' ? 'selected' : ''}" data-biz="general" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
-              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🏠</div>
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Other</div>
-            </div>
+            <div style="font-size: 2rem; margin-bottom: var(--space-2);">👤</div>
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Identification Protocol</h2>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm);">What shall I call you, sir?</p>
           </div>
           <div style="display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5);">
+            <div class="input-group">
+              <label class="input-label">Your Name</label>
+              <input type="text" id="onboard-name" class="input" placeholder="e.g. Tony Stark" value="${settings.userName || ''}" autofocus />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Workspace Name <span style="color: var(--text-muted); font-weight: normal;">(optional)</span></label>
+              <input type="text" id="onboard-company" class="input" placeholder="e.g. Stark Industries" value="${settings.companyName || ''}" />
+            </div>
+          </div>
+          <div style="margin-bottom: var(--space-5);">
+            <label class="input-label" style="margin-bottom: var(--space-3); display: block;">Data Mode</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
-              <div class="input-group">
-                <label class="input-label">Your Name</label>
-                <input type="text" id="onboard-name" class="input" placeholder="e.g. Alex Johnson" value="${settings.userName || ''}" />
+              <div class="mode-option ${selectedMode === 'demo' ? 'selected' : ''}" data-mode="demo" style="padding: var(--space-4); border-radius: var(--radius-md); cursor: pointer; border: 2px solid ${selectedMode === 'demo' ? 'var(--accent-primary)' : 'var(--border-subtle)'}; background: ${selectedMode === 'demo' ? 'rgba(var(--accent-primary-rgb), 0.08)' : 'var(--bg-secondary)'}; transition: all var(--duration-fast) ease; text-align: center;">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎭</div>
+                <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Demo Mode</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">Sample data to explore all features</div>
               </div>
-              <div class="input-group">
-                <label class="input-label">Business Name</label>
-                <input type="text" id="onboard-company" class="input" placeholder="e.g. Bright Smile Dental" value="${settings.companyName || ''}" />
+              <div class="mode-option ${selectedMode === 'clean' ? 'selected' : ''}" data-mode="clean" style="padding: var(--space-4); border-radius: var(--radius-md); cursor: pointer; border: 2px solid ${selectedMode === 'clean' ? 'var(--accent-primary)' : 'var(--border-subtle)'}; background: ${selectedMode === 'clean' ? 'rgba(var(--accent-primary-rgb), 0.08)' : 'var(--bg-secondary)'}; transition: all var(--duration-fast) ease; text-align: center;">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🚀</div>
+                <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Start Fresh</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1);">Clean workspace, your data only</div>
               </div>
             </div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2);">You can switch modes anytime from Settings.</div>
           </div>
           <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;">
             <div style="flex: 1; font-size: var(--text-xs); color: var(--text-muted);">Step 2 of 3</div>
@@ -525,11 +513,10 @@ function showOnboardingModal() {
         </div>
       `;
 
-      // Business type selection
-      let selectedBiz = currentType;
-      overlay.querySelectorAll('.biz-type-option').forEach(opt => {
+      // Mode toggle
+      overlay.querySelectorAll('.mode-option').forEach(opt => {
         opt.addEventListener('click', () => {
-          overlay.querySelectorAll('.biz-type-option').forEach(o => {
+          overlay.querySelectorAll('.mode-option').forEach(o => {
             o.style.borderColor = 'var(--border-subtle)';
             o.style.background = 'var(--bg-secondary)';
             o.classList.remove('selected');
@@ -537,13 +524,8 @@ function showOnboardingModal() {
           opt.style.borderColor = 'var(--accent-primary)';
           opt.style.background = 'rgba(var(--accent-primary-rgb), 0.08)';
           opt.classList.add('selected');
-          selectedBiz = opt.dataset.biz;
+          selectedMode = opt.dataset.mode;
         });
-        // Highlight already selected
-        if (opt.dataset.biz === currentType) {
-          opt.style.borderColor = 'var(--accent-primary)';
-          opt.style.background = 'rgba(var(--accent-primary-rgb), 0.08)';
-        }
       });
 
       document.getElementById('onboard-back-2').addEventListener('click', () => { step = 1; renderStep(); });
@@ -552,16 +534,15 @@ function showOnboardingModal() {
         const company = document.getElementById('onboard-company').value.trim();
         if (name) dataStore.updateSettings({ userName: name });
         if (company) dataStore.updateSettings({ companyName: company });
-        if (selectedBiz) dataStore.updateSettings({ businessType: selectedBiz });
         step = 3; renderStep();
       });
     } else if (step === 3) {
       overlay.innerHTML = `
         <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 480px;">
           <div style="text-align: center; margin-bottom: var(--space-5);">
-            <div style="font-size: 2rem; margin-bottom: var(--space-2);">🧠</div>
-            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Enable AI features</h2>
-            <p style="color: var(--text-secondary); font-size: var(--text-sm);">Connect a Gemini API key for smart replies, summaries, and insights. You can also do this later in Settings.</p>
+            <div style="font-size: 2rem; margin-bottom: var(--space-2);">⚡</div>
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Core Upgrade</h2>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm);">I can operate at significantly enhanced capacity with a Gemini API key. This is entirely optional — I function well without one.</p>
           </div>
           <div class="input-group" style="margin-bottom: var(--space-5);">
             <label class="input-label">Gemini API Key (optional)</label>
@@ -572,7 +553,7 @@ function showOnboardingModal() {
             <div style="flex: 1; font-size: var(--text-xs); color: var(--text-muted);">Step 3 of 3</div>
             <button class="btn btn-ghost" id="onboard-back-3">← Back</button>
             <button class="btn btn-ghost" id="onboard-skip">Skip for now</button>
-            <button class="btn btn-primary" id="onboard-connect">🔌 Connect</button>
+            <button class="btn btn-primary" id="onboard-connect">⚡ Connect</button>
           </div>
         </div>
       `;
@@ -589,9 +570,9 @@ function showOnboardingModal() {
         if (client) {
           dataStore.updateSettings({ llmApiKey: key });
           updateSidebarLLMStatus(true);
-          showToast('✅ Gemini connected! AI is now live.', 'success');
+          showToast('⚡ Core upgraded — Gemini is now online.', 'success');
         } else {
-          showToast('Failed to connect. You can try again from Settings.', 'warning');
+          showToast('Connection failed. You can try again from Settings.', 'warning');
         }
         close();
       });
@@ -599,10 +580,28 @@ function showOnboardingModal() {
   }
 
   const close = () => {
-    localStorage.setItem('assistantnet_onboarded', '1');
+    localStorage.setItem('jarvis_onboarded', '1');
     overlay.classList.add('hidden');
     overlay.innerHTML = '';
-    // Refresh dashboard to use new name
+    
+    // Apply selected data mode
+    const currentSettings = dataStore.getSettings();
+    if (selectedMode === 'clean') {
+      dataStore.disableDemoMode();
+    } else {
+      // Make sure demo mode flag is set
+      dataStore.data.demoMode = true;
+      dataStore.save();
+    }
+    // Re-apply user settings that were entered during onboarding
+    if (currentSettings.userName) dataStore.updateSettings({ userName: currentSettings.userName });
+    if (currentSettings.companyName) dataStore.updateSettings({ companyName: currentSettings.companyName });
+    if (currentSettings.llmApiKey) dataStore.updateSettings({ llmApiKey: currentSettings.llmApiKey });
+
+    // Update user avatar
+    updateUserAvatar(currentSettings.userName || '?');
+
+    // Refresh dashboard to use new name and data
     if (currentView === '/dashboard') {
       const container = document.getElementById('view-container');
       VIEWS['/dashboard'].render(container);

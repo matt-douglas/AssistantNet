@@ -1,8 +1,18 @@
 // J.A.R.V.I.S. — AI Assistant Chat Module
-import { streamChat } from '../../services/llm.js';
+import { streamChat, getProvider, getProviderDisplayName } from '../../services/llm.js';
 import { dataStore } from '../../services/data.js';
 import { escapeHtml } from '../../services/utils.js';
 import './assistant.css';
+
+function getModelBadge() {
+  const p = getProvider();
+  if (p === 'gemini') return { label: 'gemini-2.0-flash', icon: '☁️', cls: 'badge-gemini' };
+  if (p === 'ollama') {
+    const name = getProviderDisplayName().replace('Core: Ollama (', '').replace(')', '');
+    return { label: name || 'ollama', icon: '🖥️', cls: 'badge-ollama' };
+  }
+  return { label: 'built-in', icon: '⚡', cls: 'badge-fallback' };
+}
 
 let chatHistory = [];
 let isStreaming = false;
@@ -11,8 +21,8 @@ export function renderAssistant(container) {
   container.innerHTML = `
     <div class="assistant-view">
       <div class="assistant-header animate-fade-in">
-        <h1>🧠 AI Command Center</h1>
-        <p>Your autonomous office assistant — ask anything or let me take the wheel.</p>
+        <h1>⚡ AI Command Center</h1>
+        <p>Your personal AI assistant — ask anything or let me take the wheel.</p>
       </div>
 
       <div class="chat-messages" id="chat-messages">
@@ -78,9 +88,13 @@ function renderWelcomeMessage() {
       <div class="message-avatar">AI</div>
       <div class="message-content">
         <div class="message-bubble">
-          <h2>Welcome to AssistantNet 👋</h2>
-          <p>I'm your autonomous office assistant. I can manage your emails, calendar, tasks, and documents — or just answer questions about your business.</p>
-          <p><strong>Try one of the quick actions below</strong>, or ask me anything directly. I understand business context and can take real action.</p>
+          <h2>J.A.R.V.I.S. Online ⚡</h2>
+          <p>I'm your personal AI command center. I can manage your emails, calendar, tasks, and documents — or just answer questions.</p>
+          <p><strong>Try one of the quick actions below</strong>, or ask me anything directly.</p>
+        </div>
+        <div class="message-meta">
+          <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span class="model-badge ${getModelBadge().cls}">${getModelBadge().icon} ${getModelBadge().label}</span>
         </div>
       </div>
     </div>
@@ -88,12 +102,19 @@ function renderWelcomeMessage() {
 }
 
 function renderMessage(msg) {
+  const isError = msg.isError;
+  const badgeHtml = msg.role === 'assistant' && msg.badge
+    ? `<span class="model-badge ${msg.badge.cls}">${msg.badge.icon} ${msg.badge.label}</span>`
+    : '';
   return `
-    <div class="chat-message ${msg.role}">
-      <div class="message-avatar">${msg.role === 'assistant' ? 'AI' : 'MD'}</div>
+    <div class="chat-message ${msg.role} ${isError ? 'error' : ''}">
+      <div class="message-avatar">${msg.role === 'assistant' ? (isError ? '⚠️' : 'AI') : 'You'}</div>
       <div class="message-content">
-        <div class="message-bubble">${msg.html || escapeHtml(msg.text)}</div>
-        <div class="message-time">${msg.time}</div>
+        <div class="message-bubble ${isError ? 'message-error' : ''}">${msg.html || escapeHtml(msg.text)}</div>
+        <div class="message-meta">
+          <span class="message-time">${msg.time}</span>
+          ${badgeHtml}
+        </div>
       </div>
     </div>
   `;
@@ -121,9 +142,10 @@ async function sendMessage() {
   input.value = '';
   input.style.height = 'auto';
 
-  // Show typing indicator
+  // Show typing indicator with provider context
   isStreaming = true;
-  const typingEl = showTypingIndicator();
+  const badge = getModelBadge();
+  const typingEl = showTypingIndicator(badge);
 
   // Prepare context
   const context = buildContext();
@@ -133,6 +155,7 @@ async function sendMessage() {
     role: 'assistant',
     text: '',
     html: '',
+    badge,
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   };
 
@@ -146,7 +169,18 @@ async function sendMessage() {
 
     // Stream response  
     let fullText = '';
+    let gotFirstChunk = false;
+    const streamTimeout = setTimeout(() => {
+      if (!gotFirstChunk) {
+        updateTypingStatus(typingEl, 'slow', badge);
+      }
+    }, 5000);
+
     for await (const chunk of streamChat(text, context)) {
+      if (!gotFirstChunk) {
+        gotFirstChunk = true;
+        clearTimeout(streamTimeout);
+      }
       fullText += chunk;
       assistantMsg.text = fullText;
 
@@ -166,13 +200,37 @@ async function sendMessage() {
         updateLastAssistantMessage(assistantMsg.html);
       }
     }
+    clearTimeout(streamTimeout);
+
+    // If stream produced nothing, show error
+    if (!fullText.trim()) {
+      throw new Error('Empty response from model');
+    }
   } catch (err) {
-    assistantMsg.text = 'Sorry, I encountered an error. Please try again.';
-    assistantMsg.html = assistantMsg.text;
+    console.error('Chat error:', err);
+    const errorMsg = {
+      role: 'assistant',
+      text: err.message,
+      html: `<div class="error-content"><strong>⚠️ Connection Failed</strong><p>${escapeHtml(err.message)}</p><p class="error-hint">Check that your AI provider is running and configured in Settings.</p></div>`,
+      badge: { label: 'error', icon: '⚠️', cls: 'badge-error' },
+      isError: true,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
     if (typingEl.parentNode) {
       typingEl.remove();
-      chatHistory.push(assistantMsg);
-      appendMessage(assistantMsg);
+      chatHistory.push(errorMsg);
+      appendMessage(errorMsg);
+    } else {
+      // Replace last assistant message with error
+      chatHistory[chatHistory.length - 1] = errorMsg;
+      const messages = document.querySelectorAll('.chat-message.assistant');
+      const last = messages[messages.length - 1];
+      if (last) {
+        last.classList.add('error');
+        last.querySelector('.message-avatar').textContent = '⚠️';
+        last.querySelector('.message-bubble').innerHTML = errorMsg.html;
+        last.querySelector('.message-bubble').classList.add('message-error');
+      }
     }
   }
 
@@ -184,13 +242,21 @@ function appendMessage(msg) {
   const container = document.getElementById('chat-messages');
   if (!container) return;
 
+  const isError = msg.isError;
+  const badgeHtml = msg.role === 'assistant' && msg.badge
+    ? `<span class="model-badge ${msg.badge.cls}">${msg.badge.icon} ${msg.badge.label}</span>`
+    : '';
+
   const div = document.createElement('div');
-  div.className = `chat-message ${msg.role}`;
+  div.className = `chat-message ${msg.role} ${isError ? 'error' : ''}`;
   div.innerHTML = `
-    <div class="message-avatar">${msg.role === 'assistant' ? 'AI' : 'MD'}</div>
+    <div class="message-avatar">${msg.role === 'assistant' ? (isError ? '⚠️' : 'AI') : 'You'}</div>
     <div class="message-content">
-      <div class="message-bubble">${msg.html || escapeHtml(msg.text)}</div>
-      <div class="message-time">${msg.time}</div>
+      <div class="message-bubble ${isError ? 'message-error' : ''}">${msg.html || escapeHtml(msg.text)}</div>
+      <div class="message-meta">
+        <span class="message-time">${msg.time}</span>
+        ${badgeHtml}
+      </div>
     </div>
   `;
   container.appendChild(div);
@@ -206,7 +272,7 @@ function updateLastAssistantMessage(html) {
   }
 }
 
-function showTypingIndicator() {
+function showTypingIndicator(badge) {
   const container = document.getElementById('chat-messages');
   const div = document.createElement('div');
   div.className = 'chat-message assistant';
@@ -217,6 +283,7 @@ function showTypingIndicator() {
       <div class="message-bubble">
         <div class="typing-indicator">
           <span></span><span></span><span></span>
+          <span class="typing-label">Connecting to ${badge.label}...</span>
         </div>
       </div>
     </div>
@@ -224,6 +291,15 @@ function showTypingIndicator() {
   container.appendChild(div);
   scrollToBottom();
   return div;
+}
+
+function updateTypingStatus(typingEl, status, badge) {
+  const label = typingEl?.querySelector('.typing-label');
+  if (!label) return;
+  if (status === 'slow') {
+    label.textContent = `Still waiting for ${badge.label}...`;
+    label.classList.add('typing-slow');
+  }
 }
 
 function scrollToBottom() {

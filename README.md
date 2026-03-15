@@ -10,9 +10,12 @@ AI-powered autonomous office assistant portal. Designed to manage emails, calend
 - **🧠 AI Chat** — Streaming Gemini 2.0 Flash integration with business-context injection (falls back to rich built-in responses without API key)
 - **✅ Task Engine** — Kanban board with working drag-and-drop, subtask progress bars, and localStorage persistence
 - **📧 Inbox UI** — Star/unstar, filter by priority, mark-as-read, email preview pane, AI "Draft Reply" calls the LLM
-- **📊 Dashboard** — Live Chart.js rendering (bar + line charts), KPI cards, activity feed
+- **📊 Dashboard** — Live Chart.js rendering (bar + line charts), KPI cards with animated counters, activity feed
 - **📅 Calendar** — Weekly time-grid with color-coded events and week navigation
 - **📄 Documents** — Search, category filter, file cards with type icons
+- **📆 Scheduling** — Booking management with business-specific appointment types and time slots
+- **⚙️ Settings** — Business type selector, user profile, API key config, theme toggle, autonomous mode
+- **🏢 Business Types** — Dental, restaurant, barber, and gym presets that configure KPIs, labels, booking types, and seed data
 - **🔌 Design System** — 60+ CSS variables, 15+ animations, glassmorphism, full responsive breakpoints
 
 #### Visual Design
@@ -28,10 +31,9 @@ AI-powered autonomous office assistant portal. Designed to manage emails, calend
 #### What's Simulated
 - **All business data** — Emails, meetings, KPIs, documents, and activity feed are hardcoded seed data
 - **No real integrations** — Not connected to Gmail, Google Calendar, Slack, or any external APIs
-- **Autonomous mode** — Workflow engine architecture exists but no UI actions are routed through it
+- **Autonomous mode** — Workflow engine architecture exists but actions are simulated
 - **Document upload** — Drop zone exists but files are discarded
-- **Notifications** — Bell icon shows a toast, no real notification system
-- **Summarize/Schedule buttons** — Show toasts but don't call the LLM
+- **Notifications** — Bell icon shows a toast, no real notification panel
 
 ## Quick Start
 

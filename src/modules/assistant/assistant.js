@@ -277,13 +277,14 @@ function showTypingIndicator(badge) {
   const div = document.createElement('div');
   div.className = 'chat-message assistant';
   div.id = 'typing-indicator';
+  const label = badge.cls === 'badge-fallback' ? 'Thinking...' : `Connecting to ${badge.label}...`;
   div.innerHTML = `
     <div class="message-avatar">AI</div>
     <div class="message-content">
       <div class="message-bubble">
         <div class="typing-indicator">
           <span></span><span></span><span></span>
-          <span class="typing-label">Connecting to ${badge.label}...</span>
+          <span class="typing-label">${label}</span>
         </div>
       </div>
     </div>

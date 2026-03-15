@@ -311,28 +311,40 @@ function scrollToBottom() {
 }
 
 function buildContext() {
-  const emails = dataStore.getEmails();
-  const tasks = dataStore.getTasks();
-  const meetings = dataStore.getMeetings();
-  const kpis = dataStore.getKPIs();
+  try {
+    const emails = dataStore.getEmails() || [];
+    const tasks = dataStore.getTasks() || [];
+    const meetings = dataStore.getMeetings() || [];
+    const kpis = dataStore.getKPIs() || {};
 
-  return `
+    const kpiLines = Object.entries(kpis).map(([key, v]) => {
+      if (!v || typeof v !== 'object') return null;
+      const val = v.value ?? 0;
+      const change = v.change ?? 0;
+      const label = v.label || key;
+      const prefix = v.prefix || '';
+      const suffix = v.suffix || '';
+      return `- ${label}: ${prefix}${val}${suffix} (${change > 0 ? '+' : ''}${change}%)`;
+    }).filter(Boolean).join('\n');
+
+    return `
 CURRENT DATE: ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
 
 INBOX SUMMARY (${emails.length} emails):
-${emails.slice(0, 5).map(e => `- [${e.priority.toUpperCase()}] ${e.subject} — from ${e.from} (${e.read ? 'read' : 'UNREAD'})`).join('\n')}
+${emails.slice(0, 5).map(e => `- [${(e.priority || 'low').toUpperCase()}] ${e.subject} — from ${e.from} (${e.read ? 'read' : 'UNREAD'})`).join('\n') || '(empty)'}
 
 TASKS (${tasks.length} total):
-${tasks.filter(t => t.status !== 'done').slice(0, 5).map(t => `- [${t.priority.toUpperCase()}] ${t.title} — ${t.status} (due: ${t.dueDate})`).join('\n')}
+${tasks.filter(t => t.status !== 'done').slice(0, 5).map(t => `- [${(t.priority || 'low').toUpperCase()}] ${t.title} — ${t.status} (due: ${t.dueDate || 'no date'})`).join('\n') || '(none)'}
 
-MEETINGS THIS WEEK (${meetings.length} total):
-${meetings.slice(0, 5).map(m => `- ${m.date} ${m.startTime}-${m.endTime}: ${m.title} (${m.location})`).join('\n')}
+MEETINGS (${meetings.length} total):
+${meetings.slice(0, 5).map(m => `- ${m.date} ${m.startTime}-${m.endTime}: ${m.title} (${m.location || 'no location'})`).join('\n') || '(none)'}
 
-KEY METRICS:
-- Revenue: $${(kpis.revenue.value / 1000000).toFixed(2)}M (${kpis.revenue.change > 0 ? '+' : ''}${kpis.revenue.change}%)
-- Client Satisfaction: ${kpis.clientSatisfaction.value}%
-- Team Utilization: ${kpis.teamUtilization.value}%
+${kpiLines ? `KEY METRICS:\n${kpiLines}` : ''}
 `.trim();
+  } catch (err) {
+    console.warn('buildContext error:', err);
+    return `CURRENT DATE: ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
+  }
 }
 
 // escapeHtml imported from services/utils.js

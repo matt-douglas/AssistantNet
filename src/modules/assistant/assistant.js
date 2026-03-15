@@ -1,6 +1,7 @@
 // AssistantNet — AI Command Center Module
 import { streamChat } from '../../services/llm.js';
 import { dataStore } from '../../services/data.js';
+import { escapeHtml } from '../../services/utils.js';
 import './assistant.css';
 
 let chatHistory = [];
@@ -257,11 +258,7 @@ KEY METRICS:
 `.trim();
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+// escapeHtml imported from services/utils.js
 
 export function destroyAssistant() {
   // Chat history persists in memory for session

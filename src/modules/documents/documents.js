@@ -157,11 +157,33 @@ function bindDocumentEvents(container) {
     });
   });
 
+  // Upload button — trigger hidden file input
+  const uploadBtn = document.getElementById('upload-btn');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', () => {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.multiple = true;
+      fileInput.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp';
+      fileInput.addEventListener('change', () => {
+        processFileUpload(fileInput.files, container);
+      });
+      fileInput.click();
+    });
+  }
+
   // Upload area
   const uploadArea = document.getElementById('upload-area');
   if (uploadArea) {
     uploadArea.addEventListener('click', () => {
-      showToast('File browser would open here. Upload functionality coming soon!', 'info');
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.multiple = true;
+      fileInput.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp';
+      fileInput.addEventListener('change', () => {
+        processFileUpload(fileInput.files, container);
+      });
+      fileInput.click();
     });
     uploadArea.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -176,25 +198,7 @@ function bindDocumentEvents(container) {
       e.preventDefault();
       uploadArea.style.borderColor = '';
       uploadArea.style.background = '';
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        for (const file of files) {
-          const sizeStr = file.size > 1024 * 1024
-            ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
-            : (file.size / 1024).toFixed(1) + ' KB';
-          dataStore.addDocument({
-            name: file.name,
-            type: file.type.includes('pdf') ? 'pdf' : file.type.includes('image') ? 'image' : 'document',
-            category: 'general',
-            size: sizeStr,
-            owner: 'You',
-            modified: 'Just now',
-            shared: false
-          });
-        }
-        showToast(`${files.length} document${files.length > 1 ? 's' : ''} uploaded!`, 'success');
-        renderDocuments(container);
-      }
+      processFileUpload(e.dataTransfer.files, container);
     });
   }
 
@@ -235,15 +239,44 @@ function bindDocumentEvents(container) {
     });
   });
 
-  // Templates
+  // Templates — create real documents
   document.querySelectorAll('.template-card').forEach(card => {
     card.addEventListener('click', () => {
-      showToast(`Generating "${card.dataset.template}" template with AI...`, 'info');
-      setTimeout(() => {
-        showToast('Template generated!', 'success');
-      }, 1500);
+      const templateName = card.dataset.template;
+      dataStore.addDocument({
+        name: templateName,
+        type: 'document',
+        category: 'templates',
+        size: '12 KB',
+        owner: 'You',
+        modified: 'Just now',
+        shared: false
+      });
+      showToast(`"${templateName}" template created!`, 'success');
+      renderDocuments(container);
     });
   });
 }
 
+function processFileUpload(files, container) {
+  if (!files || files.length === 0) return;
+  for (const file of files) {
+    const sizeStr = file.size > 1024 * 1024
+      ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+      : (file.size / 1024).toFixed(1) + ' KB';
+    dataStore.addDocument({
+      name: file.name,
+      type: file.type.includes('pdf') ? 'pdf' : file.type.includes('image') ? 'image' : 'document',
+      category: 'general',
+      size: sizeStr,
+      owner: 'You',
+      modified: 'Just now',
+      shared: false
+    });
+  }
+  showToast(`${files.length} document${files.length > 1 ? 's' : ''} uploaded!`, 'success');
+  renderDocuments(container);
+}
+
 export function destroyDocuments() {}
+

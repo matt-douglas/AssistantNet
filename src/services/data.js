@@ -303,6 +303,10 @@ class DataStore {
     if (task) { task.status = status; this.save(); }
   }
   addTask(task) { this.data.tasks.push({ id: generateId(), ...task }); this.save(); }
+  updateTask(id, updates) {
+    const task = this.data.tasks.find(t => t.id === id);
+    if (task) { Object.assign(task, updates); this.save(); }
+  }
   deleteTask(id) { this.data.tasks = this.data.tasks.filter(t => t.id !== id); this.save(); }
 
   // Document methods
@@ -310,6 +314,10 @@ class DataStore {
   addDocument(doc) { this.data.documents.push({ id: generateId(), ...doc }); this.save(); }
 
   // Meeting methods (extended)
+  updateMeeting(id, updates) {
+    const meeting = this.data.meetings.find(m => m.id === id);
+    if (meeting) { Object.assign(meeting, updates); this.save(); }
+  }
   deleteMeeting(id) { this.data.meetings = this.data.meetings.filter(m => m.id !== id); this.save(); }
 
   // KPI & Analytics

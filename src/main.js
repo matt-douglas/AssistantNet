@@ -7,6 +7,7 @@ import { router } from './router.js';
 import { dataStore } from './services/data.js';
 import { initLLM } from './services/llm.js';
 import { workflowEngine } from './services/workflow.js';
+import { escapeHtml } from './services/utils.js';
 import { renderDashboard, destroyDashboard } from './modules/dashboard/dashboard.js';
 import { renderAssistant, destroyAssistant } from './modules/assistant/assistant.js';
 import { renderInbox, destroyInbox } from './modules/inbox/inbox.js';
@@ -398,11 +399,7 @@ function toggleNotificationPanel() {
   setTimeout(() => document.addEventListener('click', closeOnClick), 100);
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+// escapeHtml imported from services/utils.js
 
 function updateAutonomousUI(enabled) {
   const toggle = document.getElementById('autonomous-toggle');

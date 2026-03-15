@@ -1,6 +1,7 @@
 // AssistantNet — Scheduling & Client Booking Module
 import { dataStore } from '../../services/data.js';
 import { escapeHtml, escapeAttr } from '../../services/utils.js';
+import { showToast } from '../../main.js';
 import './scheduling.css';
 
 let selectedBookingDay = null;
@@ -147,16 +148,6 @@ function getNext7Days() {
     });
   }
   return days;
-}
-
-function showToast(msg) {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-  const t = document.createElement('div');
-  t.className = 'toast animate-fade-in-up';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
 }
 
 export function renderScheduling(container) {

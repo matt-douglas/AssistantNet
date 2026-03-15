@@ -1,18 +1,36 @@
 # AssistantNet
 
-> **Status: Working Front-End Demo** — Full UI with 6 interactive modules, real Gemini LLM chat, and local persistence. All business data (emails, meetings, KPIs, documents) is **simulated seed data**. No live integrations yet.
+> **Status: Working Full-Stack Demo** — 11 interactive modules, real Gemini LLM chat, Express + SQLite backend, and localStorage fallback. Business data (emails, meetings, KPIs) is **seeded** but fully interactive — all CRUD, AI actions, and scheduling work end-to-end.
 
 AI-powered autonomous office assistant portal. Designed to manage emails, calendar, tasks, documents, and analytics with intelligent workflow automation.
+
+## Screenshots
+
+| Dashboard | Calendar |
+|---|---|
+| ![Dashboard](screenshots/dashboard.png) | ![Calendar](screenshots/calendar.png) |
+
+| Task Engine | Analytics |
+|---|---|
+| ![Tasks](screenshots/tasks.png) | ![Analytics](screenshots/analytics.png) |
+
+| Smart Inbox | AI Assistant |
+|---|---|
+| ![Inbox](screenshots/inbox.png) | ![Assistant](screenshots/assistant.png) |
+
+| Documents | Scheduling |
+|---|---|
+| ![Documents](screenshots/documents.png) | ![Scheduling](screenshots/scheduling.png) |
 
 ## Features
 
 #### What's Real
 - **🧠 AI Chat** — Streaming Gemini 2.0 Flash integration with business-context injection (falls back to rich built-in responses without API key)
-- **✅ Task Engine** — Kanban board with working drag-and-drop, subtask progress bars, and localStorage persistence
-- **📧 Inbox UI** — Star/unstar, filter by priority, mark-as-read, email preview pane, AI "Draft Reply" calls the LLM
+- **✅ Task Engine** — Kanban board with working drag-and-drop, subtask progress bars, full CRUD (add/edit/delete), and localStorage persistence
+- **📧 Inbox UI** — Star/unstar, filter by priority, mark-as-read, email preview pane, AI "Draft Reply" and "Summarize" call the LLM
 - **📊 Dashboard** — Live Chart.js rendering (bar + line charts), KPI cards with animated counters, activity feed
-- **📅 Calendar** — Weekly time-grid with color-coded events and week navigation
-- **📄 Documents** — Search, category filter, file cards with type icons
+- **📅 Calendar** — Weekly time-grid with color-coded events, week navigation, and full CRUD (add/edit/delete events via modals)
+- **📄 Documents** — Search, category filter, file cards with type icons, working file upload (button + drag-and-drop), template generation
 - **📆 Scheduling** — Booking management with business-specific appointment types and time slots
 - **⚙️ Settings** — Business type selector, user profile, API key config, theme toggle, autonomous mode
 - **🏢 Business Types** — Dental, restaurant, barber, and gym presets that configure KPIs, labels, booking types, and seed data
@@ -29,11 +47,10 @@ AI-powered autonomous office assistant portal. Designed to manage emails, calend
 - **🌙 Full theme support** — Dark and light mode with all effects adapting correctly
 
 #### What's Simulated
-- **All business data** — Emails, meetings, KPIs, documents, and activity feed are hardcoded seed data
-- **No real integrations** — Not connected to Gmail, Google Calendar, Slack, or any external APIs
-- **Autonomous mode** — Workflow engine architecture exists but actions are simulated
-- **Document upload** — Drop zone exists but files are discarded
-- **Notifications** — Bell icon shows a toast, no real notification panel
+- **Seed data only** — Emails, meetings, KPIs, and activity feed start with hardcoded data (but all user actions are real and persisted)
+- **No live integrations** — Not connected to Gmail, Google Calendar, Slack, or any external APIs
+- **Autonomous mode** — Workflow engine architecture exists and processes actions, but no real external actions are taken
+- **Notifications** — Bell icon shows a real notification panel, but notifications are derived from data rather than push-based
 
 ## Quick Start
 

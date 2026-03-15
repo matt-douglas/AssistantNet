@@ -265,6 +265,9 @@ class DataStore {
       settings: {
         autonomousMode: true,
         llmApiKey: '',
+        llmProvider: 'fallback',
+        ollamaModel: '',
+        ollamaBaseUrl: '/ollama',
         userName: '',
         companyName: ''
       }
@@ -330,6 +333,9 @@ class DataStore {
       settings: {
         autonomousMode: true,
         llmApiKey: '',
+        llmProvider: 'fallback',
+        ollamaModel: '',
+        ollamaBaseUrl: '/ollama',
         userName: '',
         companyName: ''
       }

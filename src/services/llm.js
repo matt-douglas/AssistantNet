@@ -1,8 +1,10 @@
-// AssistantNet — LLM Service (Gemini with Deferred Initialization)
-// Uses lazy singleton to avoid Vite dev server hang (per KI)
+// J.A.R.V.I.S. — LLM Service (Multi-Provider: Gemini, Ollama, Fallback)
+// Supports cloud (Gemini) and local (Ollama/MLX) AI backends
 
 let genAIClient = null;
-let chatSession = null;
+let currentProvider = 'fallback'; // 'gemini' | 'ollama' | 'fallback'
+let ollamaBaseUrl = '/ollama';
+let ollamaModel = '';
 
 const SYSTEM_PROMPT = `You are J.A.R.V.I.S. — Just A Rather Very Intelligent System. You are a personal AI assistant inspired by Tony Stark's AI companion from the Marvel Cinematic Universe.
 
@@ -33,12 +35,32 @@ Response style:
 You are integrated into a personal command center. You have access to the user's tasks, calendar, emails, documents, and analytics. When asked to take action, confirm the action concisely and execute it.`;
 
 
+// ---- Provider Management ----
+
+export function getProvider() { return currentProvider; }
+
+export function setProvider(provider) {
+  if (['gemini', 'ollama', 'fallback'].includes(provider)) {
+    currentProvider = provider;
+    console.log(`⚡ J.A.R.V.I.S. core switched to: ${provider}`);
+  }
+}
+
+export function getProviderDisplayName() {
+  if (currentProvider === 'gemini') return 'Core: Gemini Online';
+  if (currentProvider === 'ollama') return `Core: Ollama (${ollamaModel || 'local'})`;
+  return 'Core: Local Mode';
+}
+
+
+// ---- Gemini Provider ----
+
 export async function initLLM(apiKey) {
   if (!apiKey) return null;
   try {
-    // Dynamic import to avoid top-level import hang with Vite
     const { GoogleGenAI } = await import('@google/genai');
     genAIClient = new GoogleGenAI({ apiKey });
+    currentProvider = 'gemini';
     return genAIClient;
   } catch (err) {
     console.error('Failed to initialize Gemini:', err);
@@ -47,38 +69,147 @@ export async function initLLM(apiKey) {
 }
 
 export function isLLMReady() {
-  return genAIClient !== null;
+  return currentProvider !== 'fallback';
 }
 
-export async function* streamChat(userMessage, context = '') {
-  if (!genAIClient) {
+
+// ---- Ollama Provider ----
+
+export function setOllamaConfig(baseUrl, model) {
+  if (baseUrl) ollamaBaseUrl = baseUrl.replace(/\/$/, '');
+  if (model) ollamaModel = model;
+}
+
+export async function detectOllama(baseUrl) {
+  const url = (baseUrl || ollamaBaseUrl).replace(/\/$/, '');
+  try {
+    const res = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const models = (data.models || []).map(m => ({
+      name: m.name,
+      size: m.size,
+      modified: m.modified_at,
+      family: m.details?.family || 'unknown',
+      paramSize: m.details?.parameter_size || '',
+      quantization: m.details?.quantization_level || '',
+    }));
+    return models;
+  } catch {
+    return null;
+  }
+}
+
+export async function initOllama(baseUrl, model) {
+  const url = (baseUrl || ollamaBaseUrl).replace(/\/$/, '');
+  const models = await detectOllama(url);
+  if (!models || models.length === 0) return null;
+
+  ollamaBaseUrl = url;
+  ollamaModel = model || models[0].name;
+  currentProvider = 'ollama';
+  console.log(`⚡ Ollama connected: ${ollamaModel} at ${ollamaBaseUrl}`);
+  return { model: ollamaModel, models };
+}
+
+async function* streamOllama(userMessage, context) {
+  const systemContent = context
+    ? `${SYSTEM_PROMPT}\n\nCurrent context:\n${context}`
+    : SYSTEM_PROMPT;
+
+  try {
+    const res = await fetch(`${ollamaBaseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: ollamaModel,
+        messages: [
+          { role: 'system', content: systemContent },
+          { role: 'user', content: userMessage }
+        ],
+        stream: true,
+        options: {
+          temperature: 0.7,
+          num_predict: 2048,
+        }
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Ollama ${res.status}: ${err}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const json = JSON.parse(line);
+          if (json.message?.content) {
+            yield json.message.content;
+          }
+          if (json.done) return;
+        } catch {
+          // skip malformed JSON chunks
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Ollama stream error:', err);
+    yield `I encountered an error communicating with the local model. Error: ${err.message}. Falling back to built-in intelligence.`;
     yield* simulateStream(userMessage, context);
+  }
+}
+
+
+// ---- Unified Streaming Interface ----
+
+export async function* streamChat(userMessage, context = '') {
+  if (currentProvider === 'ollama' && ollamaModel) {
+    yield* streamOllama(userMessage, context);
     return;
   }
 
-  try {
-    const fullPrompt = context
-      ? `${SYSTEM_PROMPT}\n\nCurrent context:\n${context}\n\nUser: ${userMessage}`
-      : userMessage;
+  if (currentProvider === 'gemini' && genAIClient) {
+    try {
+      const fullPrompt = context
+        ? `${SYSTEM_PROMPT}\n\nCurrent context:\n${context}\n\nUser: ${userMessage}`
+        : userMessage;
 
-    const response = await genAIClient.models.generateContentStream({
-      model: 'gemini-2.0-flash',
-      contents: fullPrompt,
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        temperature: 0.7,
-        maxOutputTokens: 2048,
+      const response = await genAIClient.models.generateContentStream({
+        model: 'gemini-2.0-flash',
+        contents: fullPrompt,
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+        }
+      });
+
+      for await (const chunk of response) {
+        const text = chunk.text;
+        if (text) yield text;
       }
-    });
-
-    for await (const chunk of response) {
-      const text = chunk.text;
-      if (text) yield text;
+    } catch (err) {
+      console.error('LLM stream error:', err);
+      yield `I encountered an error communicating with Gemini. Error: ${err.message}. Falling back to built-in intelligence.`;
     }
-  } catch (err) {
-    console.error('LLM stream error:', err);
-    yield `I encountered an error communicating with the AI service. Error: ${err.message}. Falling back to built-in intelligence.`;
+    return;
   }
+
+  // Fallback
+  yield* simulateStream(userMessage, context);
 }
 
 export async function quickAction(action, context) {
@@ -234,4 +365,4 @@ When enabled, I'll proactively manage your inbox, flag schedule conflicts, and k
   }
 }
 
-export default { initLLM, isLLMReady, streamChat, quickAction };
+export default { initLLM, initOllama, detectOllama, isLLMReady, streamChat, quickAction, getProvider, setProvider, getProviderDisplayName, setOllamaConfig, getOllamaModels: detectOllama };

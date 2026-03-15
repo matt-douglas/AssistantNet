@@ -5,7 +5,7 @@ import './styles/components.css';
 
 import { router } from './router.js';
 import { dataStore } from './services/data.js';
-import { initLLM } from './services/llm.js';
+import { initLLM, initOllama, setProvider, setOllamaConfig, getProvider, getProviderDisplayName, isLLMReady } from './services/llm.js';
 import { workflowEngine } from './services/workflow.js';
 import { escapeHtml } from './services/utils.js';
 import { renderDashboard, destroyDashboard } from './modules/dashboard/dashboard.js';
@@ -19,7 +19,6 @@ import { renderAnalytics, destroyAnalytics } from './modules/analytics/analytics
 import { renderContacts, destroyContacts } from './modules/contacts/contacts.js';
 import { renderScheduling, destroyScheduling } from './modules/scheduling/scheduling.js';
 import { openCommandPalette, closeCommandPalette, isCommandPaletteOpen } from './modules/command-palette/command-palette.js';
-import { isLLMReady } from './services/llm.js';
 import { checkBackend, hasBackend } from './services/api.js';
 
 // Navigation config
@@ -67,10 +66,17 @@ async function init() {
   setupTopBar();
   setupKeyboardShortcuts();
 
-  // Try to init LLM from stored API key
+  // Restore saved AI provider
   const settings = dataStore.getSettings();
-  if (settings.llmApiKey) {
+  const savedProvider = settings.llmProvider || 'fallback';
+  if (savedProvider === 'gemini' && settings.llmApiKey) {
     initLLM(settings.llmApiKey).then(() => updateSidebarLLMStatus(isLLMReady()));
+  } else if (savedProvider === 'ollama') {
+    const baseUrl = settings.ollamaBaseUrl || '/ollama';
+    const model = settings.ollamaModel || '';
+    initOllama(baseUrl, model).then((result) => {
+      updateSidebarLLMStatus(!!result);
+    });
   }
 
   // Set autonomous mode UI
@@ -419,7 +425,7 @@ function updateAutonomousUI(enabled) {
 function updateSidebarLLMStatus(connected) {
   const llmEl = document.getElementById('llm-status-text');
   const llmDot = document.getElementById('llm-status-dot');
-  if (llmEl) llmEl.textContent = connected ? 'Core: Gemini Online' : 'Core: Local Mode';
+  if (llmEl) llmEl.textContent = getProviderDisplayName();
   if (llmDot) {
     llmDot.className = connected ? 'status-dot online' : 'status-dot offline';
   }

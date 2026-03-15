@@ -77,6 +77,7 @@ async function init() {
 
   // Expose globally for settings module
   window.updateSidebarLLMStatus = updateSidebarLLMStatus;
+  window.updateUserAvatar = updateUserAvatar;
 
   // Start router
   router.start();
@@ -213,6 +214,43 @@ function setupTopBar() {
     e.stopPropagation();
     toggleNotificationPanel();
   });
+
+  // Theme toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const savedTheme = localStorage.getItem('assistantnet_theme') || 'dark';
+  if (savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  updateThemeIcon(savedTheme);
+
+  themeToggle?.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('assistantnet_theme', next);
+    updateThemeIcon(next);
+    showToast(next === 'light' ? '☀️ Light mode activated' : '🌙 Dark mode activated', 'info');
+  });
+
+  // Update user avatar initials from settings
+  updateUserAvatar();
+}
+
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('theme-icon');
+  if (!icon) return;
+  if (theme === 'light') {
+    icon.innerHTML = '<circle cx="9" cy="9" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.4 3.4l1.4 1.4M13.2 13.2l1.4 1.4M3.4 14.6l1.4-1.4M13.2 4.8l1.4-1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
+  } else {
+    icon.innerHTML = '<path d="M9 1.5a7.5 7.5 0 100 15 5.5 5.5 0 010-15z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+}
+
+function updateUserAvatar() {
+  const settings = dataStore.getSettings();
+  const name = settings.userName || 'MD';
+  const parts = name.trim().split(/\s+/);
+  const initials = parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
+  const el = document.getElementById('user-initials');
+  if (el) el.textContent = initials;
 }
 
 function showSearchResults(query) {
@@ -436,21 +474,50 @@ function showOnboardingModal() {
       document.getElementById('onboard-next-1').addEventListener('click', () => { step = 2; renderStep(); });
     } else if (step === 2) {
       const settings = dataStore.getSettings();
+      const currentType = settings.businessType || '';
       overlay.innerHTML = `
-        <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 480px;">
+        <div class="modal" style="animation: scaleIn 0.25s var(--ease-spring); max-width: 540px;">
           <div style="text-align: center; margin-bottom: var(--space-5);">
             <div style="font-size: 2rem; margin-bottom: var(--space-2);">🏢</div>
-            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Personalize your workspace</h2>
-            <p style="color: var(--text-secondary); font-size: var(--text-sm);">We'll use this to customize your dashboard.</p>
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold);">Tell us about your business</h2>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm);">We'll customize your scheduling, labels, and appointments to match.</p>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-5);">
+            <div class="biz-type-option ${currentType === 'dental' ? 'selected' : ''}" data-biz="dental" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
+              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🦷</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Dental</div>
+            </div>
+            <div class="biz-type-option ${currentType === 'barber' ? 'selected' : ''}" data-biz="barber" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
+              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">💈</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Barber / Salon</div>
+            </div>
+            <div class="biz-type-option ${currentType === 'restaurant' ? 'selected' : ''}" data-biz="restaurant" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
+              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🍽️</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Restaurant</div>
+            </div>
+            <div class="biz-type-option ${currentType === 'consulting' ? 'selected' : ''}" data-biz="consulting" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
+              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">💼</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Consulting</div>
+            </div>
+            <div class="biz-type-option ${currentType === 'fitness' ? 'selected' : ''}" data-biz="fitness" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
+              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🏋️</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Fitness</div>
+            </div>
+            <div class="biz-type-option ${currentType === 'general' ? 'selected' : ''}" data-biz="general" style="text-align: center; padding: var(--space-4) var(--space-3); border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--border-subtle); background: var(--bg-secondary); transition: all var(--duration-fast) ease;">
+              <div style="font-size: 1.5rem; margin-bottom: var(--space-1);">🏠</div>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold);">Other</div>
+            </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5);">
-            <div class="input-group">
-              <label class="input-label">Your Name</label>
-              <input type="text" id="onboard-name" class="input" placeholder="e.g. Alex Johnson" value="${settings.userName || ''}" />
-            </div>
-            <div class="input-group">
-              <label class="input-label">Company / Organization</label>
-              <input type="text" id="onboard-company" class="input" placeholder="e.g. Acme Corp" value="${settings.companyName || ''}" />
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+              <div class="input-group">
+                <label class="input-label">Your Name</label>
+                <input type="text" id="onboard-name" class="input" placeholder="e.g. Alex Johnson" value="${settings.userName || ''}" />
+              </div>
+              <div class="input-group">
+                <label class="input-label">Business Name</label>
+                <input type="text" id="onboard-company" class="input" placeholder="e.g. Bright Smile Dental" value="${settings.companyName || ''}" />
+              </div>
             </div>
           </div>
           <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;">
@@ -460,12 +527,35 @@ function showOnboardingModal() {
           </div>
         </div>
       `;
+
+      // Business type selection
+      let selectedBiz = currentType;
+      overlay.querySelectorAll('.biz-type-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          overlay.querySelectorAll('.biz-type-option').forEach(o => {
+            o.style.borderColor = 'var(--border-subtle)';
+            o.style.background = 'var(--bg-secondary)';
+            o.classList.remove('selected');
+          });
+          opt.style.borderColor = 'var(--accent-primary)';
+          opt.style.background = 'rgba(var(--accent-primary-rgb), 0.08)';
+          opt.classList.add('selected');
+          selectedBiz = opt.dataset.biz;
+        });
+        // Highlight already selected
+        if (opt.dataset.biz === currentType) {
+          opt.style.borderColor = 'var(--accent-primary)';
+          opt.style.background = 'rgba(var(--accent-primary-rgb), 0.08)';
+        }
+      });
+
       document.getElementById('onboard-back-2').addEventListener('click', () => { step = 1; renderStep(); });
       document.getElementById('onboard-next-2').addEventListener('click', () => {
         const name = document.getElementById('onboard-name').value.trim();
         const company = document.getElementById('onboard-company').value.trim();
         if (name) dataStore.updateSettings({ userName: name });
         if (company) dataStore.updateSettings({ companyName: company });
+        if (selectedBiz) dataStore.updateSettings({ businessType: selectedBiz });
         step = 3; renderStep();
       });
     } else if (step === 3) {
@@ -557,15 +647,24 @@ export function showToast(message, type = 'info') {
   const icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${message}</span>`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type]}</span>
+    <span style="flex:1">${message}</span>
+    <button class="toast-close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px;font-size:14px;line-height:1;">✕</button>
+    <div class="toast-progress" style="position:absolute;bottom:0;left:0;height:2px;background:var(--accent-primary);border-radius:0 0 var(--radius-md) var(--radius-md);animation:toastProgress 4s linear forwards;"></div>
+  `;
   container.appendChild(toast);
 
-  setTimeout(() => {
+  const dismiss = () => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateX(20px)';
     toast.style.transition = 'all 0.3s ease';
     setTimeout(() => toast.remove(), 300);
-  }, 4000);
+  };
+
+  toast.querySelector('.toast-close')?.addEventListener('click', dismiss);
+
+  setTimeout(dismiss, 4000);
 }
 
 // ---- SVG Icons ----

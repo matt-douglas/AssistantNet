@@ -34,7 +34,7 @@ export function renderDashboard(container) {
     <div class="dashboard">
       <div class="dashboard-greeting animate-fade-in-up">
         <h1>${greeting}, ${escapeHtml(userName)}</h1>
-        <p>Here's your business overview for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</p>
+        <p>Here's your ${({dental:'practice',barber:'shop',restaurant:'service',fitness:'studio'})[settings.businessType] || 'business'} overview for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</p>
       </div>
 
       ${showChecklist ? `
@@ -61,17 +61,14 @@ export function renderDashboard(container) {
       ` : ''}
 
       <div class="kpi-grid">
-        ${renderKPICard('Revenue', formatCurrency(kpis.revenue.value), kpis.revenue.change, 0)}
-        ${renderKPICard('Tasks Done', kpis.tasksCompleted.value, kpis.tasksCompleted.change, 1)}
-        ${renderKPICard('Emails Handled', kpis.emailsHandled.value.toLocaleString(), kpis.emailsHandled.change, 2)}
-        ${renderKPICard('Client Score', kpis.clientSatisfaction.value + '%', kpis.clientSatisfaction.change, 3)}
+        ${renderBusinessKPIs(kpis, settings)}
       </div>
 
       <div class="dashboard-grid">
         <div class="card animate-fade-in-up" style="animation-delay: 200ms">
           <div class="card-header">
             <div>
-              <div class="card-title">Weekly Task Throughput</div>
+              <div class="card-title">${({dental:'Weekly Appointments',barber:'Weekly Bookings',restaurant:'Weekly Reservations',fitness:'Weekly Sessions'})[settings.businessType] || 'Weekly Task Throughput'}</div>
               <div class="card-subtitle">Completed vs Created</div>
             </div>
           </div>
@@ -81,7 +78,7 @@ export function renderDashboard(container) {
         <div class="card animate-fade-in-up" style="animation-delay: 250ms">
           <div class="card-header">
             <div>
-              <div class="card-title">Revenue Trend</div>
+              <div class="card-title">${({dental:'Patient Volume',barber:'Client Volume',restaurant:'Reservation Trend',fitness:'Membership Trend'})[settings.businessType] || 'Revenue Trend'}</div>
               <div class="card-subtitle">Last 6 Months</div>
             </div>
           </div>
@@ -148,30 +145,18 @@ export function renderDashboard(container) {
           </div>
         </div>
         <div class="quick-actions">
-          <button class="quick-action-btn" onclick="window.location.hash='#/assistant'">
-            <span class="icon">🧠</span>
-            <span class="label">Ask AI Assistant</span>
-          </button>
-          <button class="quick-action-btn" onclick="window.location.hash='#/inbox'">
-            <span class="icon">📧</span>
-            <span class="label">Check Inbox</span>
-          </button>
-          <button class="quick-action-btn" onclick="window.location.hash='#/tasks'">
-            <span class="icon">✅</span>
-            <span class="label">View Tasks</span>
-          </button>
-          <button class="quick-action-btn" onclick="window.location.hash='#/calendar'">
-            <span class="icon">📅</span>
-            <span class="label">Today's Schedule</span>
-          </button>
-          <button class="quick-action-btn" onclick="window.location.hash='#/documents'">
-            <span class="icon">📄</span>
-            <span class="label">Browse Documents</span>
-          </button>
-          <button class="quick-action-btn" id="qa-daily-brief">
-            <span class="icon">📊</span>
-            <span class="label">Daily Briefing</span>
-          </button>
+          ${(() => {
+            const bt = settings.businessType || 'general';
+            const bookLabel = ({dental:'📋 New Patient Appointment',barber:'✂️ New Client Booking',restaurant:'🍽️ New Reservation',fitness:'🏋️ New Session'})[bt];
+            const rows = [];
+            if (bookLabel) rows.push(`<button class="quick-action-btn" onclick="window.location.hash='#/scheduling'"><span class="icon">${bookLabel.split(' ')[0]}</span><span class="label">${bookLabel.slice(bookLabel.indexOf(' ') + 1)}</span></button>`);
+            rows.push(`<button class="quick-action-btn" onclick="window.location.hash='#/assistant'"><span class="icon">🧠</span><span class="label">Ask AI Assistant</span></button>`);
+            rows.push(`<button class="quick-action-btn" onclick="window.location.hash='#/inbox'"><span class="icon">📧</span><span class="label">Check Inbox</span></button>`);
+            rows.push(`<button class="quick-action-btn" onclick="window.location.hash='#/calendar'"><span class="icon">📅</span><span class="label">${({dental:'Patient Schedule',barber:'Appointments',restaurant:'Reservations'})[bt] || "Today's Schedule"}</span></button>`);
+            rows.push(`<button class="quick-action-btn" onclick="window.location.hash='#/contacts'"><span class="icon">👥</span><span class="label">${({dental:'Patient Directory',barber:'Client List',restaurant:'Guest Book'})[bt] || 'Contacts'}</span></button>`);
+            rows.push(`<button class="quick-action-btn" id="qa-daily-brief"><span class="icon">📊</span><span class="label">Daily Briefing</span></button>`);
+            return rows.join('');
+          })()}
         </div>
       </div>
     </div>
@@ -199,12 +184,59 @@ export function renderDashboard(container) {
   });
 }
 
+function renderBusinessKPIs(kpis, settings) {
+  const bt = (settings.businessType || 'general').toLowerCase();
+  const bookings = dataStore.data.bookings || [];
+  const today = new Date().toISOString().split('T')[0];
+  const todayBookings = bookings.filter(b => b.date === today).length;
+  const weekBookings = bookings.length;
+  const presets = {
+    dental: [
+      { label: 'Patients Today', value: todayBookings || 3, change: 8.5 },
+      { label: 'Appointments This Week', value: weekBookings || 18, change: 12.0 },
+      { label: 'Pending Recalls', value: 7, change: -15.0 },
+      { label: 'Patient Satisfaction', value: '96%', change: 2.3 },
+    ],
+    barber: [
+      { label: 'Clients Today', value: todayBookings || 8, change: 5.2 },
+      { label: 'Bookings This Week', value: weekBookings || 34, change: 10.0 },
+      { label: 'Avg Ticket', value: '$42', change: 6.8 },
+      { label: 'Return Rate', value: '78%', change: 3.1 },
+    ],
+    restaurant: [
+      { label: 'Covers Tonight', value: todayBookings || 42, change: 12.5 },
+      { label: 'Reservations This Week', value: weekBookings || 156, change: 8.3 },
+      { label: 'Tables Open', value: 6, change: 0 },
+      { label: 'Guest Rating', value: '4.7★', change: 1.2 },
+    ],
+    fitness: [
+      { label: 'Sessions Today', value: todayBookings || 6, change: 10.0 },
+      { label: 'Active Members', value: 124, change: 4.5 },
+      { label: 'Classes This Week', value: weekBookings || 28, change: 7.0 },
+      { label: 'Retention', value: '89%', change: 2.0 },
+    ],
+  };
+  const kpiSet = presets[bt] || [
+    { label: 'Revenue', value: formatCurrency(kpis.revenue.value), change: kpis.revenue.change },
+    { label: 'Tasks Done', value: kpis.tasksCompleted.value, change: kpis.tasksCompleted.change },
+    { label: 'Emails Handled', value: kpis.emailsHandled.value.toLocaleString(), change: kpis.emailsHandled.change },
+    { label: 'Client Score', value: kpis.clientSatisfaction.value + '%', change: kpis.clientSatisfaction.change },
+  ];
+  return kpiSet.map((k, i) => renderKPICard(k.label, k.value, k.change, i)).join('');
+}
+
 function renderKPICard(label, value, change, index) {
   const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
   const changeIcon = change > 0 ? '↑' : change < 0 ? '↓' : '→';
+  const icons = { 'Revenue': '💰', 'Tasks Done': '✅', 'Emails Handled': '📧', 'Client Score': '⭐',
+    'Patients Today': '🦷', 'Appointments This Week': '📋', 'Pending Recalls': '📞', 'Patient Satisfaction': '😊',
+    'Clients Today': '💈', 'Bookings This Week': '📅', 'Avg Ticket': '💵', 'Return Rate': '🔄',
+    'Covers Tonight': '🍽️', 'Reservations This Week': '📝', 'Tables Open': '🪑', 'Guest Rating': '⭐',
+    'Sessions Today': '🏋️', 'Active Members': '👥', 'Classes This Week': '📆', 'Retention': '📊' };
+  const icon = icons[label] || '📈';
   return `
     <div class="kpi-card animate-fade-in-up" style="animation-delay: ${index * 80}ms">
-      <div class="kpi-label">${label}</div>
+      <div class="kpi-label">${icon} ${label}</div>
       <div class="kpi-value" data-target="${value}">${value}</div>
       <span class="kpi-change ${changeClass}">${changeIcon} ${Math.abs(change)}%</span>
     </div>
@@ -219,6 +251,33 @@ function formatCurrency(value) {
 
 function animateKPICounters() {
   document.querySelectorAll('.kpi-value').forEach(el => {
+    const target = el.dataset.target;
+    // Extract numeric portion
+    const match = target.match(/^([\$]?)([\d,]+\.?\d*)(.*)/); 
+    if (match) {
+      const prefix = match[1];
+      const numStr = match[2].replace(/,/g, '');
+      const num = parseFloat(numStr);
+      const suffix = match[3];
+      if (!isNaN(num) && num > 0) {
+        const duration = 800;
+        const startTime = performance.now();
+        el.textContent = prefix + '0' + suffix;
+        const step = (now) => {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          // easeOutQuart
+          const eased = 1 - Math.pow(1 - progress, 4);
+          const current = eased * num;
+          const formatted = num >= 100 ? Math.round(current).toLocaleString() : current.toFixed(numStr.includes('.') ? (numStr.split('.')[1]?.length || 0) : 0);
+          el.textContent = prefix + formatted + suffix;
+          if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+        return;
+      }
+    }
+    // Fallback: fade in
     el.style.animation = 'countUp 0.6s var(--ease-out) forwards';
   });
 }

@@ -6,11 +6,57 @@ import './scheduling.css';
 let selectedBookingDay = null;
 let selectedSlot = null;
 
-const BOOKING_TYPES = [
-  { id: 'consultation', name: 'Consultation Call', duration: 30, icon: '📞', color: '#6366f1' },
-  { id: 'strategy', name: 'Strategy Session', duration: 60, icon: '🧠', color: '#06b6d4' },
-  { id: 'onboarding', name: 'Client Onboarding', duration: 45, icon: '🤝', color: '#22c55e' },
-];
+const BOOKING_PRESETS = {
+  dental: [
+    { id: 'cleaning', name: 'Teeth Cleaning', duration: 45, icon: '🪥', color: '#06b6d4' },
+    { id: 'exam', name: 'Dental Exam', duration: 30, icon: '🦷', color: '#6366f1' },
+    { id: 'rootcanal', name: 'Root Canal', duration: 90, icon: '💉', color: '#ef4444' },
+  ],
+  barber: [
+    { id: 'haircut', name: 'Haircut', duration: 30, icon: '✂️', color: '#6366f1' },
+    { id: 'beard', name: 'Beard Trim', duration: 20, icon: '🧔', color: '#06b6d4' },
+    { id: 'full', name: 'Full Service', duration: 60, icon: '💈', color: '#22c55e' },
+  ],
+  restaurant: [
+    { id: 'dinner', name: 'Dinner Reservation', duration: 90, icon: '🍽️', color: '#f59e0b' },
+    { id: 'lunch', name: 'Lunch Table', duration: 60, icon: '🥗', color: '#22c55e' },
+    { id: 'event', name: 'Private Event', duration: 180, icon: '🥂', color: '#8b5cf6' },
+  ],
+  consulting: [
+    { id: 'consultation', name: 'Consultation Call', duration: 30, icon: '📞', color: '#6366f1' },
+    { id: 'strategy', name: 'Strategy Session', duration: 60, icon: '🧠', color: '#06b6d4' },
+    { id: 'onboarding', name: 'Client Onboarding', duration: 45, icon: '🤝', color: '#22c55e' },
+  ],
+  fitness: [
+    { id: 'session', name: 'Training Session', duration: 60, icon: '🏋️', color: '#22c55e' },
+    { id: 'assessment', name: 'Fitness Assessment', duration: 45, icon: '📋', color: '#6366f1' },
+    { id: 'class', name: 'Group Class', duration: 45, icon: '🧘', color: '#f59e0b' },
+  ],
+  general: [
+    { id: 'consultation', name: 'Consultation Call', duration: 30, icon: '📞', color: '#6366f1' },
+    { id: 'strategy', name: 'Strategy Session', duration: 60, icon: '🧠', color: '#06b6d4' },
+    { id: 'onboarding', name: 'Client Onboarding', duration: 45, icon: '🤝', color: '#22c55e' },
+  ],
+};
+
+const BIZ_LABELS = {
+  dental: { title: 'Patient Scheduling', client: 'Patient', header: '🦷 Appointments' },
+  barber: { title: 'Client Scheduling', client: 'Client', header: '💈 Appointments' },
+  restaurant: { title: 'Reservations', client: 'Guest', header: '🍽️ Reservations' },
+  consulting: { title: 'Scheduling', client: 'Client', header: '📅 Scheduling' },
+  fitness: { title: 'Session Booking', client: 'Member', header: '🏋️ Sessions' },
+  general: { title: 'Scheduling', client: 'Client', header: '📅 Scheduling' },
+};
+
+function getBookingTypes() {
+  const bizType = (dataStore.getSettings().businessType) || 'general';
+  return BOOKING_PRESETS[bizType] || BOOKING_PRESETS.general;
+}
+
+function getBizLabels() {
+  const bizType = (dataStore.getSettings().businessType) || 'general';
+  return BIZ_LABELS[bizType] || BIZ_LABELS.general;
+}
 
 const DEFAULT_AVAILABILITY = [
   { day: 'Monday',    enabled: true, start: '09:00', end: '17:00' },
@@ -118,6 +164,10 @@ export function renderScheduling(container) {
   const upcoming = bookings.filter(b => b.status !== 'cancelled');
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
   const confirmedCount = bookings.filter(b => b.status === 'confirmed').length;
+  const BOOKING_TYPES = getBookingTypes();
+  const labels = getBizLabels();
+  const settings = dataStore.getSettings();
+  const displayName = settings.companyName || settings.userName || 'your business';
 
   const days = getNext7Days();
   selectedBookingDay = selectedBookingDay || days[1]?.date || days[0].date;
@@ -129,8 +179,8 @@ export function renderScheduling(container) {
     <div class="scheduling-view">
       <div class="scheduling-header animate-fade-in">
         <div>
-          <h1>📅 Scheduling</h1>
-          <p style="color: var(--text-secondary); margin-top: var(--space-1);">Manage your availability and client bookings</p>
+          <h1>${labels.header}</h1>
+          <p style="color: var(--text-secondary); margin-top: var(--space-1);">Manage your availability and ${labels.client.toLowerCase()} bookings</p>
         </div>
         <div class="scheduling-stats">
           <div class="scheduling-stat">
@@ -166,8 +216,8 @@ export function renderScheduling(container) {
       <div class="availability-section">
         <!-- Left: Client Booking Preview -->
         <div class="client-preview animate-fade-in-up" style="animation-delay: 0.1s;">
-          <h3>📆 Book a time with MD</h3>
-          <div class="client-preview-subtitle">Select a date and available time slot</div>
+          <h3>📆 Book with ${escapeHtml(displayName)}</h3>
+          <div class="client-preview-subtitle">Select a service, date, and available time slot</div>
 
           <div class="booking-types" style="margin-bottom: var(--space-4);">
             ${BOOKING_TYPES.map((t, i) => `
@@ -198,9 +248,9 @@ export function renderScheduling(container) {
           </div>
 
           <div class="client-form" id="booking-form" style="${selectedSlot ? '' : 'display:none;'}">
-            <input class="input" type="text" id="client-name" placeholder="Client name" />
-            <input class="input" type="email" id="client-email" placeholder="Client email" />
-            <input class="input" type="text" id="client-notes" placeholder="Meeting notes (optional)" />
+            <input class="input" type="text" id="client-name" placeholder="${labels.client} name" />
+            <input class="input" type="email" id="client-email" placeholder="${labels.client} email" />
+            <input class="input" type="text" id="client-notes" placeholder="Notes (optional)" />
             <button class="btn btn-primary" id="confirm-booking" style="width: 100%;">
               ✅ Confirm Appointment — ${selectedSlot || '—'} on ${selectedBookingDay ? new Date(selectedBookingDay + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
             </button>

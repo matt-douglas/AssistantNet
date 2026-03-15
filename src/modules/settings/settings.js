@@ -31,8 +31,20 @@ export function renderSettings(container) {
               <input type="text" id="setting-username" class="input" value="${escapeAttr(settings.userName)}" placeholder="MD" />
             </div>
             <div class="input-group">
-              <label class="input-label">Company Name</label>
-              <input type="text" id="setting-company" class="input" value="${escapeAttr(settings.companyName)}" placeholder="Your Company" />
+              <label class="input-label">Business Name</label>
+              <input type="text" id="setting-company" class="input" value="${escapeAttr(settings.companyName)}" placeholder="Your Business" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Business Type</label>
+              <select id="setting-biz-type" class="select" style="width: 100%">
+                <option value="general" ${(settings.businessType || 'general') === 'general' ? 'selected' : ''}>General</option>
+                <option value="dental" ${settings.businessType === 'dental' ? 'selected' : ''}>🦷 Dental</option>
+                <option value="barber" ${settings.businessType === 'barber' ? 'selected' : ''}>💈 Barber / Salon</option>
+                <option value="restaurant" ${settings.businessType === 'restaurant' ? 'selected' : ''}>🍽️ Restaurant</option>
+                <option value="consulting" ${settings.businessType === 'consulting' ? 'selected' : ''}>💼 Consulting</option>
+                <option value="fitness" ${settings.businessType === 'fitness' ? 'selected' : ''}>🏋️ Fitness</option>
+              </select>
+              <div class="input-hint">Changes booking types and labels on the scheduling page.</div>
             </div>
           </div>
         </div>
@@ -171,11 +183,12 @@ function bindSettingsEvents() {
   // Save settings
   document.getElementById('save-settings-btn')?.addEventListener('click', async () => {
     const userName = document.getElementById('setting-username').value.trim() || 'MD';
-    const companyName = document.getElementById('setting-company').value.trim() || 'Your Company';
+    const companyName = document.getElementById('setting-company').value.trim() || 'Your Business';
     const apiKey = document.getElementById('setting-api-key').value.trim();
     const autonomousMode = document.getElementById('setting-autonomous').checked;
+    const businessType = document.getElementById('setting-biz-type')?.value || 'general';
 
-    dataStore.updateSettings({ userName, companyName, llmApiKey: apiKey, autonomousMode });
+    dataStore.updateSettings({ userName, companyName, llmApiKey: apiKey, autonomousMode, businessType });
 
     // Init LLM if key provided
     if (apiKey) {
@@ -183,10 +196,15 @@ function bindSettingsEvents() {
       updateLLMStatusUI(!!client);
     }
 
-    // Update user avatar
-    const avatarEl = document.getElementById('user-avatar');
-    if (avatarEl) {
-      avatarEl.querySelector('span').textContent = userName.slice(0, 2).toUpperCase();
+    // Update user avatar using global function
+    if (typeof window.updateUserAvatar === 'function') {
+      window.updateUserAvatar();
+    } else {
+      const avatarEl = document.getElementById('user-initials');
+      if (avatarEl) {
+        const parts = userName.trim().split(/\s+/);
+        avatarEl.textContent = parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : userName.slice(0, 2).toUpperCase();
+      }
     }
 
     showToast('Settings saved!', 'success');

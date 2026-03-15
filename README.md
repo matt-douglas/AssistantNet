@@ -13,7 +13,17 @@ AI-powered autonomous office assistant portal. Designed to manage emails, calend
 - **📊 Dashboard** — Live Chart.js rendering (bar + line charts), KPI cards, activity feed
 - **📅 Calendar** — Weekly time-grid with color-coded events and week navigation
 - **📄 Documents** — Search, category filter, file cards with type icons
-- **🔌 Design System** — 60+ CSS variables, 11 animations, glassmorphism, full responsive breakpoints
+- **🔌 Design System** — 60+ CSS variables, 15+ animations, glassmorphism, full responsive breakpoints
+
+#### Visual Design
+- **🎨 Aurora mesh background** — Animated gradient backdrop with grain texture overlay
+- **🪟 Glassmorphism** — Frosted sidebar and top-bar with `backdrop-filter` blur
+- **✨ Micro-interactions** — KPI shimmer sweep on hover, button shimmer, icon scale effects, nav slide
+- **📊 Animated KPI counters** — Numbers count up with easeOutQuart curve on dashboard load
+- **🌈 Gradient accents** — Warm tri-color gradients on active nav indicator with glow pulse
+- **🔔 Toast progress bar** — Auto-countdown strip with close button on notifications
+- **⌨️ ⌘K shortcut badge** — Keyboard hint in the global search bar
+- **🌙 Full theme support** — Dark and light mode with all effects adapting correctly
 
 #### What's Simulated
 - **All business data** — Emails, meetings, KPIs, documents, and activity feed are hardcoded seed data
